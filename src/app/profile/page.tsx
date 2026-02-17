@@ -240,8 +240,8 @@ export default function ProfilePage() {
                 <Card className="overflow-hidden shadow-lg border-0">
                     <div className="h-24 bg-gradient-to-r from-primary to-accent" />
                     <div className="relative p-6 pt-0">
-                        {isMobile && (
-                            <div className="absolute top-4 right-4">
+                        {isMobile && !isProfilePage && (
+                            <div className="absolute top-2 right-6">
                                 <NotificationBell />
                             </div>
                         )}
@@ -372,4 +372,6 @@ export default function ProfilePage() {
         </div>
     );
 }
+    
+
     
