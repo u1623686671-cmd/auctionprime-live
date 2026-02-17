@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from 'next/link';
@@ -236,14 +237,14 @@ export default function ProfilePage() {
                     <div className="h-24 bg-gradient-to-r from-primary to-accent" />
                     <div className="relative p-6 pt-0">
                         {isMobile && (
-                            <div className="absolute top-1 right-4">
+                            <div className="absolute top-2 right-5">
                                 <NotificationBell />
                             </div>
                         )}
                         <div className="flex items-center -mt-12">
-                             <div className="flex-1 flex justify-center items-center">
+                             <div className="relative flex-1 flex justify-center items-center">
                                 {(userProfile?.isUltimateUser || userProfile?.isPlusUser) && (
-                                    <div className="absolute top-1/2 -translate-y-1/2 left-8">
+                                    <div className="absolute top-1/2 -translate-y-1/2">
                                         {userProfile.isUltimateUser ? (
                                             <Badge className="bg-purple-500 text-white hover:bg-purple-500 border-2 border-background">ULTIMATE</Badge>
                                         ) : userProfile.isPlusUser ? (
@@ -306,7 +307,7 @@ export default function ProfilePage() {
                 <div className="grid grid-cols-2 gap-4">
                     <Link href="/my-bids">
                         <Card className="shadow-lg border-0 hover:bg-muted/50 transition-all duration-300 group rounded-2xl">
-                            <CardContent className="pt-6 flex flex-col items-center justify-center text-center h-24">
+                            <CardContent className="pt-6 flex flex-col items-center justify-center text-center min-h-[6rem]">
                                 <Gavel className="w-6 h-6 text-primary mb-2" />
                                 <p className="font-semibold text-base">My Bids</p>
                             </CardContent>
@@ -314,7 +315,7 @@ export default function ProfilePage() {
                     </Link>
                     <Link href="/retailer/dashboard">
                         <Card className="shadow-lg border-0 hover:bg-muted/50 transition-all duration-300 group rounded-2xl">
-                            <CardContent className="pt-6 flex flex-col items-center justify-center text-center h-24">
+                            <CardContent className="pt-6 flex flex-col items-center justify-center text-center min-h-[6rem]">
                                 <Package className="w-6 h-6 text-primary mb-2" />
                                 <p className="font-semibold text-base">My Listings</p>
                             </CardContent>
