@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from 'next/link';
@@ -93,7 +92,7 @@ export default function SubscriptionPage() {
   const isSubscribed = isPlusUser || isUltimateUser;
 
   const billingCycle = userProfile?.subscriptionBillingCycle;
-  const renewalDate = userProfile?.subscriptionRenewalDate ? new Date(userProfile.subscriptionRenewalDate) : null;
+  const renewalDate = userProfile?.subscriptionRenewalDate ? userProfile.subscriptionRenewalDate.toDate() : null;
   const hasStripeSubscription = !!userProfile?.stripeSubscriptionId;
 
   return (
@@ -125,7 +124,15 @@ export default function SubscriptionPage() {
                         ) : isPlusUser ? (
                             <Badge className="bg-sky-500 text-white hover:bg-sky-500 text-base">PLUS</Badge>
                         ) : null}
+                         {billingCycle && (
+                            <span className="text-sm text-muted-foreground capitalize">({billingCycle})</span>
+                        )}
                     </div>
+                     {renewalDate && (
+                        <p className="text-sm text-muted-foreground">
+                            Renews on {format(renewalDate, 'PP')}
+                        </p>
+                    )}
                 </div>
                 <Button 
                     onClick={handleManageBilling} 
