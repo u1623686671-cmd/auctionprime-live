@@ -242,7 +242,7 @@ export function AuctionDetailView({ itemId, category }: AuctionDetailViewProps) 
           <div className={`grid md:grid-cols-2 gap-6 items-start ${isPlate || isPhoneNumber ? 'max-w-md mx-auto' : ''}`}>
               <div className="space-y-6">
                   <Card>
-                      <CardHeader>
+                      <CardHeader className="pb-3">
                         <CardTitle className="flex items-center gap-2"><Gavel /><span>Bidding</span></CardTitle>
                         <CardDescription>
                             {status === 'completed' ? 'The final bid was:' : status === 'live' ? 'The current bid is:' : 'The starting bid is:'}
