@@ -252,7 +252,7 @@ export default function ProfilePage() {
                                     <AvatarFallback className="text-3xl">{user.displayName ? getInitials(user.displayName) : 'U'}</AvatarFallback>
                                 </Avatar>
                                 {(userProfile?.isUltimateUser || userProfile?.isPlusUser) && (
-                                    <div className="absolute bottom-0 right-0 translate-y-1 -translate-x-1">
+                                    <div className="absolute top-0 right-0 -translate-y-1 -translate-x-1">
                                         {userProfile.isUltimateUser ? (
                                             <Badge className="bg-purple-500 text-white hover:bg-purple-500 border-2 border-background">ULTIMATE</Badge>
                                         ) : userProfile.isPlusUser ? (
