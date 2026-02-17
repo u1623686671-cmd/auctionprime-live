@@ -275,7 +275,6 @@ export default function ProfilePage() {
                         </div>
                         <div className="text-center mt-4">
                             <h2 className="text-xl font-semibold">{userProfile?.firstName || "User"}</h2>
-                            <p className="text-sm text-muted-foreground">{user.email}</p>
                         </div>
                     </div>
                 </Card>
@@ -373,5 +372,3 @@ export default function ProfilePage() {
 
     
 }
-
-    
