@@ -3,7 +3,7 @@
 
 import { useEffect, useRef } from "react";
 import Image from "next/image";
-import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase } from "@/firebase";
+import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase, errorEmitter, FirestorePermissionError } from "@/firebase";
 import { doc, collection, addDoc, serverTimestamp, updateDoc, increment } from "firebase/firestore";
 
 import {
@@ -91,8 +91,13 @@ export function AuctionDetailView({ itemId, category }: AuctionDetailViewProps) 
         updateDoc(itemRef, {
             viewCount: increment(1)
         }).catch(err => {
-            // This is a non-critical background task.
-            console.error("Failed to increment view count:", err);
+            // This is a non-critical background task, but we still report it for debugging.
+            const permissionError = new FirestorePermissionError({
+                path: itemRef.path,
+                operation: 'update',
+                requestResourceData: { viewCount: 'increment(1)' }
+            });
+            errorEmitter.emit('permission-error', permissionError);
         });
       
       // --- Log for immediate client-side suggestions ---
