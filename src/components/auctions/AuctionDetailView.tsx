@@ -26,6 +26,10 @@ import { LebanesePlateDisplay } from "@/components/auctions/lebanese-plate-displ
 import { PhoneNumberDisplay } from "@/components/auctions/phone-number-display";
 import { AuctionTimerBar } from "./AuctionTimerBar";
 
+// Use a simple in-memory Set to track viewed items for the current session.
+// This is robust against component re-mounts within the same page load.
+const viewCountedInSession = new Set<string>();
+
 type AuctionDoc = {
     // Common fields
     userId: string;
@@ -81,25 +85,17 @@ export function AuctionDetailView({ itemId, category }: AuctionDetailViewProps) 
   const userProfileRef = useMemoFirebase(() => user ? doc(firestore, 'users', user.uid) : null, [firestore, user]);
   const { data: userProfile, isLoading: isUserProfileLoading } = useDoc(userProfileRef);
 
-    // Effect to log user view for personalization and increment view count
+  // Effect to log user view for personalization and increment view count
   useEffect(() => {
     if (!user || !firestore || !itemRef || isItemLoading || !item) {
         return;
     }
 
-    try {
-        const viewedItemsKey = 'sessionViewCountedIds'; // Use a specific key for the view count
-        const viewedItemsRaw = localStorage.getItem(viewedItemsKey);
-        const viewedItems = viewedItemsRaw ? JSON.parse(viewedItemsRaw) : [];
-        
-        // If we have already incremented the view for this item in this session, stop.
-        if (viewedItems.includes(itemId)) {
-            return; 
-        }
-
-        // --- Mark as viewed for this session and update count ---
-        viewedItems.push(itemId);
-        localStorage.setItem(viewedItemsKey, JSON.stringify(viewedItems));
+    // --- New View Counting Logic ---
+    // Use a simple in-memory Set to track viewed items for the current session.
+    // This is robust against component re-mounts within the same page load.
+    if (!viewCountedInSession.has(itemId)) {
+        viewCountedInSession.add(itemId); // Mark as counted for this session
 
         updateDoc(itemRef, {
             viewCount: increment(1)
@@ -111,8 +107,10 @@ export function AuctionDetailView({ itemId, category }: AuctionDetailViewProps) 
             });
             errorEmitter.emit('permission-error', permissionError);
         });
-      
-        // --- Log for immediate client-side suggestions ---
+    }
+
+    // --- Log for immediate client-side suggestions (still uses localStorage) ---
+    try {
         const MAX_HISTORY = 50;
         const categories = JSON.parse(localStorage.getItem('viewedCategories') || '[]');
         categories.unshift(category);
@@ -125,20 +123,24 @@ export function AuctionDetailView({ itemId, category }: AuctionDetailViewProps) 
             if (itemIds.length > MAX_HISTORY) itemIds.pop();
             localStorage.setItem('viewedItemIds', JSON.stringify(itemIds));
         }
-      
-        // --- Log for future server-side processing ---
-        const interactionRef = collection(firestore, 'userInteractions');
-        addDoc(interactionRef, {
-            userId: user.uid,
-            itemId: itemId,
-            category: category,
-            interactionType: 'view',
-            timestamp: serverTimestamp(),
-        });
-
     } catch (e) {
-      console.error("Could not process view tracking from localStorage:", e);
+      console.error("Could not process suggestion logging from localStorage:", e);
     }
+      
+    // --- Log for future server-side processing ---
+    const interactionRef = collection(firestore, 'userInteractions');
+    addDoc(interactionRef, {
+        userId: user.uid,
+        itemId: itemId,
+        category: category,
+        interactionType: 'view',
+        timestamp: serverTimestamp(),
+    }).catch(err => {
+        // This is a background task, so we just log the error.
+        // It won't crash the app if it fails.
+        console.error("Failed to log user interaction:", err);
+    });
+
   }, [user, firestore, itemRef, isItemLoading, item, category, itemId]);
 
 
