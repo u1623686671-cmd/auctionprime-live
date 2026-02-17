@@ -51,10 +51,11 @@ service cloud.firestore {
     }
 
     function isUpdatingViewCount() {
-      // A user can update the view count, as long as it's the only field being changed.
-      // The check for an exact increment is removed to prevent race condition errors on mobile.
+      // This function allows any signed-in user to increment the view count by exactly 1,
+      // and ensures no other fields are being changed. This is used in a transaction on the client.
       return isSignedIn() &&
-        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['viewCount']);
+             request.resource.data.viewCount == (resource.data.get('viewCount', 0) + 1) &&
+             request.resource.data.diff(resource.data).affectedKeys().hasOnly(['viewCount']);
     }
 
     // Collection Group Rules

@@ -4,7 +4,7 @@
 import { useEffect, useRef } from "react";
 import Image from "next/image";
 import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase, errorEmitter, FirestorePermissionError } from "@/firebase";
-import { doc, collection, addDoc, serverTimestamp, updateDoc, increment } from "firebase/firestore";
+import { doc, collection, addDoc, serverTimestamp, updateDoc, increment, runTransaction } from "firebase/firestore";
 
 import {
   Card,
@@ -91,23 +91,32 @@ export function AuctionDetailView({ itemId, category }: AuctionDetailViewProps) 
     const sessionViewKey = `viewed-item-${itemId}`;
     const hasBeenViewedInSession = sessionStorage.getItem(sessionViewKey);
 
-    if (!hasBeenViewedInSession && user) {
+    if (!hasBeenViewedInSession) {
         // Mark as viewed immediately to prevent duplicate updates on re-renders
         sessionStorage.setItem(sessionViewKey, 'true');
 
-        // Perform the database update asynchronously.
-        updateDoc(itemRef, {
-            viewCount: increment(1)
+        // Use a transaction to safely increment the view count.
+        // This is more robust against race conditions than a simple update.
+        runTransaction(firestore, async (transaction) => {
+            const freshDoc = await transaction.get(itemRef);
+            if (!freshDoc.exists()) {
+                // Document doesn't exist, do nothing.
+                return;
+            }
+            const newViewCount = (freshDoc.data().viewCount || 0) + 1;
+            transaction.update(itemRef, { viewCount: newViewCount });
         }).catch(err => {
+            // The error from runTransaction might already be a permission error.
+            // We create our own for consistent reporting.
             const permissionError = new FirestorePermissionError({
                 path: itemRef.path,
                 operation: 'update',
-                requestResourceData: { viewCount: 'increment(1)' }
+                requestResourceData: { viewCount: 'transactional_increment' } // Use a string to indicate the operation type
             });
             errorEmitter.emit('permission-error', permissionError);
         });
     }
-  }, [firestore, itemRef, itemId, user]); // Added user dependency
+  }, [firestore, itemRef, itemId, user]);
 
   // Separate effect for personalization logging
   useEffect(() => {
