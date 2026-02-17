@@ -25,7 +25,7 @@ const formatCountdown = (diff: number) => {
     const seconds = Math.floor((diff / 1000) % 60);
 
     if (days > 0) {
-        return `${days}d ${hours.toString().padStart(2, '0')}h ${minutes.toString().padStart(2, '0')}m`;
+        return `${days}d ${hours.toString().padStart(2, '0')}h`;
     }
     return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
 };
@@ -74,9 +74,11 @@ export function AuctionTimerBar({ startDate, endDate, isCard = false }: AuctionT
   if (isLoading) {
       if (isCard) {
         return (
-            <div className="flex items-center justify-start text-xs text-muted-foreground gap-1.5 h-6">
-                <Skeleton className="h-4 w-4" />
-                <Skeleton className="h-3 w-16" />
+            <div className="w-full bg-muted/50 rounded-md p-1.5">
+                <div className="flex items-center justify-center text-xs gap-1.5 h-6">
+                    <Skeleton className="h-4 w-4" />
+                    <Skeleton className="h-3 w-16" />
+                </div>
             </div>
         )
       }
@@ -111,12 +113,14 @@ export function AuctionTimerBar({ startDate, endDate, isCard = false }: AuctionT
     const prefix = isEnded ? 'Auction' : (isUpcoming ? `Starts in` : `Ends in`);
     const timeValue = isEnded ? 'Ended' : timeLeft;
     return (
-      <div className="w-full flex items-center gap-1.5 justify-start text-xs h-6">
-          <Clock className="w-3.5 h-3.5 text-muted-foreground" />
-          <span className="text-muted-foreground">{prefix}</span>
-          <span className={cn("font-bold text-sm font-mono tracking-tight", textColor)}>
-              {timeValue}
-          </span>
+      <div className="w-full bg-muted/50 rounded-md p-1.5">
+          <div className="flex items-center gap-1.5 justify-center text-xs h-6">
+              <Clock className="w-3.5 h-3.5 text-muted-foreground" />
+              <span className="text-muted-foreground">{prefix}</span>
+              <span className={cn("font-bold text-sm font-mono tracking-tight", textColor)}>
+                  {timeValue}
+              </span>
+          </div>
       </div>
     );
   }
