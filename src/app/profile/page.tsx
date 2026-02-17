@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from 'next/link';
@@ -19,6 +18,7 @@ import { useDropzone } from 'react-dropzone';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import heic2any from "heic2any";
+import { NotificationBell } from '@/components/notifications/NotificationBell';
 
 
 const accountNavItems = [
@@ -239,14 +239,19 @@ export default function ProfilePage() {
                 <Card className="overflow-hidden shadow-lg border-0">
                     <div className="h-24 bg-gradient-to-r from-primary to-accent" />
                     <div className="relative p-6 pt-0">
+                        {isMobile && (
+                            <div className="absolute top-4 right-4">
+                                <NotificationBell />
+                            </div>
+                        )}
                         <div className="flex items-center -mt-12">
                             <div className="flex-1 flex justify-center items-center">
                                 {(userProfile?.isUltimateUser || userProfile?.isPlusUser) && (
                                     <>
                                         {userProfile.isUltimateUser ? (
-                                            <Badge className="bg-purple-500 text-white hover:bg-purple-500 border-2 border-background">ULTIMATE</Badge>
+                                            <Badge className="bg-purple-500 text-white hover:bg-purple-500 border-2 border-background -translate-y-6">ULTIMATE</Badge>
                                         ) : userProfile.isPlusUser ? (
-                                            <Badge className="bg-sky-500 text-white hover:bg-sky-500 border-2 border-background">PLUS</Badge>
+                                            <Badge className="bg-sky-500 text-white hover:bg-sky-500 border-2 border-background -translate-y-6">PLUS</Badge>
                                         ) : null}
                                     </>
                                 )}
@@ -302,7 +307,7 @@ export default function ProfilePage() {
                     </div>
                 )}
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4">
                     <Link href="/my-bids">
                         <Card className="shadow-lg border-0 hover:bg-muted/50 transition-all duration-300 group rounded-2xl">
                             <CardContent className="pt-6 flex flex-col items-center justify-center text-center">

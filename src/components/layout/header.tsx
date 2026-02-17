@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from "next/link";
@@ -168,12 +167,14 @@ export function Header() {
                 {/* Mobile actions */}
                 <div className="flex items-center gap-2 md:hidden">
                   {!isProfilePage && (
-                    <Button size="sm" variant="outline" className="text-primary border-primary font-bold hover:text-primary hover:bg-primary/10 gap-1 px-2" onClick={() => setIsListingDialogOpen(true)}>
-                        <Plus className="h-4 w-4" />
-                        Add item
-                    </Button>
+                    <>
+                      <Button size="sm" variant="outline" className="text-primary border-primary font-bold hover:text-primary hover:bg-primary/10 gap-1 px-2" onClick={() => setIsListingDialogOpen(true)}>
+                          <Plus className="h-4 w-4" />
+                          Add item
+                      </Button>
+                      <NotificationBell />
+                    </>
                   )}
-                   <NotificationBell />
                 </div>
               
                 {/* Desktop items */}
