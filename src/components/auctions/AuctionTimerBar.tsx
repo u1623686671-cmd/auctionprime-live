@@ -117,7 +117,7 @@ export function AuctionTimerBar({ startDate, endDate, isCard = false }: AuctionT
           <div className="flex items-center gap-1.5 justify-center text-xs h-6">
               <Clock className="w-3.5 h-3.5 text-muted-foreground" />
               <span className="text-muted-foreground">{prefix}</span>
-              <span className={cn("font-bold text-sm font-mono tracking-tight", textColor)}>
+              <span className={cn("font-bold text-base font-mono tracking-tight", textColor)}>
                   {timeValue}
               </span>
           </div>
