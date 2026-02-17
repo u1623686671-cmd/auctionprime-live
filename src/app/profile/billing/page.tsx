@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { useState, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { createCustomerPortalSession } from '@/lib/stripe/actions';
+import { doc } from 'firebase/firestore';
 
 export default function BillingPage() {
   const { user, isUserLoading } = useUser();
