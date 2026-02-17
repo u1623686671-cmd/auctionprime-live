@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
@@ -13,6 +12,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Loader2, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
+import { cn } from '@/lib/utils';
 
 const plans = {
     plus: {
@@ -127,7 +127,7 @@ export default function BillingPage() {
             <Card>
                 <CardHeader>
                     <CardTitle>Confirm Your Subscription</CardTitle>
-                    <CardDescription>You are subscribing to the <span className="font-semibold text-primary">{planDetails.name}</span> plan.</CardDescription>
+                    <CardDescription>You are subscribing to the <span className={cn("font-semibold", planId === 'plus' ? 'text-sky-500' : 'text-purple-500')}>{planDetails.name}</span> plan.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                     <div>
