@@ -31,59 +31,10 @@ export default function SubscriptionPage() {
   const firestore = useFirestore();
   const router = useRouter();
   const { toast } = useToast();
-
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [processingPlan, setProcessingPlan] = useState<string | null>(null);
-  const [planToUpgrade, setPlanToUpgrade] = useState<'plus' | 'ultimate' | null>(null);
   const [isCancelling, setIsCancelling] = useState(false);
 
   const userProfileRef = useMemoFirebase(() => user ? doc(firestore, 'users', user.uid) : null, [firestore, user]);
   const { data: userProfile, isLoading: isUserProfileLoading } = useDoc(userProfileRef);
-  
-  const handleCheckout = async (plan: 'plus' | 'ultimate', cycle: 'monthly' | 'yearly') => {
-      if (!user || !user.email || !userProfileRef || !userProfile) return;
-      setIsProcessing(true);
-      setProcessingPlan(`${plan}-${cycle}`);
-      try {
-          const renewalDate = cycle === 'monthly' 
-              ? add(new Date(), { months: 1 }) 
-              : add(new Date(), { years: 1 });
-
-          const updateData: any = {
-              isPlusUser: plan === 'plus',
-              isUltimateUser: plan === 'ultimate',
-              subscriptionBillingCycle: cycle,
-              stripeSubscriptionId: `sub_bypassed_${Date.now()}`,
-              subscriptionRenewalDate: renewalDate,
-          };
-          
-          if(plan === 'plus'){
-              updateData.promotionTokens = (userProfile.promotionTokens || 0) + (cycle === 'monthly' ? 1 : 12);
-          }
-          else if (plan === 'ultimate'){
-              updateData.promotionTokens = (userProfile.promotionTokens || 0) + (cycle === 'monthly' ? 5 : 60);
-              updateData.extendTokens = (userProfile.extendTokens || 0) + (cycle === 'monthly' ? 10 : 120);
-          }
-
-          await updateDoc(userProfileRef, updateData);
-
-          toast({
-              variant: 'success',
-              title: 'Subscription Activated!',
-              description: `You have successfully subscribed to the ${plan} plan.`,
-          });
-          setPlanToUpgrade(null);
-      } catch (error: any) {
-          toast({
-              variant: 'destructive',
-              title: 'Activation Error',
-              description: error.message || 'Could not activate the subscription.',
-          });
-      } finally {
-          setIsProcessing(false);
-          setProcessingPlan(null);
-      }
-  }
 
   const handleCancelSubscription = async () => {
     if (!user || !userProfileRef) return;
@@ -147,45 +98,6 @@ export default function SubscriptionPage() {
 
   return (
     <div className="container mx-auto max-w-6xl px-4 py-12 md:py-16">
-        <AlertDialog open={!!planToUpgrade} onOpenChange={(open) => !open && setPlanToUpgrade(null)}>
-            <AlertDialogContent>
-                <AlertDialogHeader>
-                <AlertDialogTitle>Choose Billing Cycle</AlertDialogTitle>
-                <AlertDialogDescription>
-                    You'll be redirected to Stripe to complete your purchase. You can save ~17% with a yearly plan.
-                </AlertDialogDescription>
-                </AlertDialogHeader>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4">
-                    <Button
-                        variant="outline"
-                        className="h-auto py-4 flex flex-col"
-                        onClick={() => handleCheckout(planToUpgrade!, 'monthly')}
-                        disabled={isProcessing}
-                    >
-                        <span className="font-bold text-lg">Billed Monthly</span>
-                        <span className="text-muted-foreground text-sm">
-                            {planToUpgrade === 'plus' ? '$4.99 / month' : '$9.99 / month'}
-                        </span>
-                        {isProcessing && processingPlan === `${planToUpgrade}-monthly` && <Loader2 className="mt-2 h-4 w-4 animate-spin"/>}
-                    </Button>
-                    <Button
-                        variant="outline"
-                        className="h-auto py-4 flex flex-col border-primary/50"
-                        onClick={() => handleCheckout(planToUpgrade!, 'yearly')}
-                        disabled={isProcessing}
-                    >
-                        <span className="font-bold text-lg text-primary">Billed Yearly</span>
-                        <span className="text-muted-foreground text-sm">
-                            {planToUpgrade === 'plus' ? '$49.99 / year' : '$99.99 / year'}
-                        </span>
-                        {isProcessing && processingPlan === `${planToUpgrade}-yearly` && <Loader2 className="mt-2 h-4 w-4 animate-spin"/>}
-                    </Button>
-                </div>
-                <AlertDialogFooter className="pt-2">
-                    <AlertDialogCancel disabled={isProcessing}>Cancel</AlertDialogCancel>
-                </AlertDialogFooter>
-            </AlertDialogContent>
-        </AlertDialog>
         <div className="mb-6">
             <Button asChild variant="ghost" size="icon" className="rounded-full bg-muted text-muted-foreground hover:bg-muted/80">
                 <Link href="/profile">
@@ -307,11 +219,10 @@ export default function SubscriptionPage() {
           </CardContent>
            <CardFooter>
                 <Button 
-                    onClick={() => setPlanToUpgrade('plus')}
-                    disabled={isProcessing || isPlusUser || isUltimateUser} 
+                    onClick={() => router.push('/profile/billing?plan=plus')}
+                    disabled={isPlusUser || isUltimateUser} 
                     className="w-full bg-sky-500 text-white hover:bg-sky-500/90"
                 >
-                    {isProcessing && processingPlan?.startsWith('plus') && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
                     {isPlusUser ? 'Current Plan' : isUltimateUser ? 'Downgrade Not Available' : 'Upgrade to Plus'}
                 </Button>
           </CardFooter>
@@ -348,11 +259,10 @@ export default function SubscriptionPage() {
           </CardContent>
           <CardFooter>
                 <Button 
-                    onClick={() => setPlanToUpgrade('ultimate')}
-                    disabled={isProcessing || isUltimateUser}
+                    onClick={() => router.push('/profile/billing?plan=ultimate')}
+                    disabled={isUltimateUser}
                     className="w-full bg-purple-500 text-white hover:bg-purple-500/90"
                 >
-                    {isProcessing && processingPlan?.startsWith('ultimate') && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
                     {isUltimateUser ? 'Current Plan' : 'Upgrade to Ultimate'}
                 </Button>
           </CardFooter>
