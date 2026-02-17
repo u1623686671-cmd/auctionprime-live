@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from 'next/link';
@@ -125,11 +126,6 @@ export default function ProfilePage() {
             </header>
             <div className="space-y-8">
                 <Card className="relative shadow-sm">
-                    {isMobile && (
-                        <div className="absolute top-2 right-2">
-                             <NotificationBell />
-                        </div>
-                    )}
                     <CardContent className="pt-6 flex flex-col items-center text-center">
                       <Avatar className="w-24 h-24 mb-4">
                         {(userProfile?.photoURL || user.photoURL) && <AvatarImage src={userProfile?.photoURL || user.photoURL!} data-ai-hint="person face" />}
