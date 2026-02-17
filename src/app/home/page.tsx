@@ -861,7 +861,7 @@ export default function HomePage() {
                         </Link>
                         {renderAuctionRow(topPicks, areAllListingsLoading, "/top-picks")}
                     </section>
-                    <section className="border-2 border-[hsl(var(--info-emphasis))] rounded-xl p-6 shadow-[0_0_25px_hsl(var(--info-emphasis)/0.4)]">
+                    <section>
                         <Link href="/promoted" className="flex justify-between items-center mb-6 group">
                             <h2 className="text-xl font-bold font-headline group-hover:text-primary transition-colors">Promoted Listings</h2>
                             <ChevronRight className="w-5 h-5 text-foreground transition-colors group-hover:text-primary" />
