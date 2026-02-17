@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Gavel, User, CreditCard, KeyRound, LifeBuoy, LogOut, Package, Shield, ChevronRight, FileText, Info, Coins, PlusCircle, AlertTriangle, Loader2, Upload } from 'lucide-react';
 import { useUser, useAuth, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
-import { signOut, updateProfile } from 'firebase/auth';
+import { signOut } from 'firebase/auth';
 import { doc, updateDoc } from "firebase/firestore";
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
@@ -157,7 +157,7 @@ export default function ProfilePage() {
                 fileToProcess = new File([convertedBlob], newFileName, { type: 'image/jpeg' });
             }
 
-            const resizedDataUrl = await resizeImage(fileToProcess, 512);
+            const resizedDataUrl = await resizeImage(fileToProcess, 256);
 
             await updateDoc(userProfileRef, { photoURL: resizedDataUrl });
 
