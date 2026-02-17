@@ -13,6 +13,7 @@ import { Label } from '@/components/ui/label';
 import { Loader2, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
+import { Separator } from '@/components/ui/separator';
 
 const plans = {
     plus: {
@@ -49,6 +50,38 @@ export default function BillingPage() {
     const userProfileRef = useMemoFirebase(() => user ? doc(firestore, 'users', user.uid) : null, [firestore, user]);
     const { data: userProfile, isLoading: isUserProfileLoading } = useDoc(userProfileRef);
 
+    const [creditAmount, setCreditAmount] = useState(0);
+    const [isUpgrade, setIsUpgrade] = useState(false);
+
+    useEffect(() => {
+        if (!userProfile || !planId) return;
+
+        const upgradeCheck = userProfile.isPlusUser && planId === 'ultimate';
+        setIsUpgrade(upgradeCheck);
+
+        if (upgradeCheck && userProfile.subscriptionRenewalDate && userProfile.subscriptionBillingCycle) {
+            const plusRenewalDate = userProfile.subscriptionRenewalDate.toDate();
+            const now = new Date();
+            
+            const wasYearly = userProfile.subscriptionBillingCycle === 'yearly';
+            const pricePaid = wasYearly ? plans.plus.yearlyPrice : plans.plus.monthlyPrice;
+            const startDate = wasYearly ? add(plusRenewalDate, { years: -1 }) : add(plusRenewalDate, { months: -1 });
+
+            const totalDuration = plusRenewalDate.getTime() - startDate.getTime();
+            const timeUsed = now.getTime() - startDate.getTime();
+            
+            let credit = 0;
+            if (timeUsed < totalDuration) {
+                const remainingRatio = 1 - (timeUsed / totalDuration);
+                credit = pricePaid * remainingRatio;
+            }
+            setCreditAmount(credit > 0 ? credit : 0);
+        } else {
+            setCreditAmount(0);
+        }
+    }, [userProfile, planId]);
+
+
     useEffect(() => {
         if (!isUserLoading && !user) {
             router.replace('/login');
@@ -64,27 +97,9 @@ export default function BillingPage() {
         setIsProcessing(true);
 
         try {
-            const isUpgrade = userProfile.isPlusUser && planId === 'ultimate';
             let proRataMessage = '';
-
-            if (isUpgrade && userProfile.subscriptionRenewalDate && userProfile.subscriptionBillingCycle) {
-                const plusRenewalDate = userProfile.subscriptionRenewalDate.toDate();
-                const now = new Date();
-                
-                const wasYearly = userProfile.subscriptionBillingCycle === 'yearly';
-                const pricePaid = wasYearly ? plans.plus.yearlyPrice : plans.plus.monthlyPrice;
-                const startDate = wasYearly ? add(plusRenewalDate, { years: -1 }) : add(plusRenewalDate, { months: -1 });
-
-                const totalDuration = plusRenewalDate.getTime() - startDate.getTime();
-                const timeUsed = now.getTime() - startDate.getTime();
-                
-                if (timeUsed < totalDuration) {
-                    const remainingRatio = 1 - (timeUsed / totalDuration);
-                    const creditAmount = pricePaid * remainingRatio;
-                    if (creditAmount > 0) {
-                      proRataMessage = ` A credit of $${creditAmount.toFixed(2)} for the remainder of your Plus plan has been applied to your account.`;
-                    }
-                }
+            if (isUpgrade && creditAmount > 0) {
+                proRataMessage = ` A credit of $${creditAmount.toFixed(2)} for the remainder of your Plus plan has been applied.`;
             }
 
             const renewalDate = billingCycle === 'monthly'
@@ -136,6 +151,8 @@ export default function BillingPage() {
     }
     
     const price = billingCycle === 'monthly' ? planDetails.monthlyPrice : planDetails.yearlyPrice;
+    const finalPrice = Math.max(0, price - creditAmount);
+
 
     return (
         <div className="container mx-auto max-w-2xl px-4 py-12 md:py-16">
@@ -174,10 +191,24 @@ export default function BillingPage() {
                         </RadioGroup>
                     </div>
 
-                    <div className="p-4 rounded-lg bg-secondary text-center">
-                        <p className="text-sm text-muted-foreground">Total Due Today</p>
-                        <p className="text-4xl font-bold">${price.toFixed(2)}</p>
+                    <div className="p-4 rounded-lg bg-secondary space-y-3">
+                         <div className="flex justify-between items-center">
+                            <p className="text-muted-foreground">{planDetails.name} ({billingCycle})</p>
+                            <p className="font-semibold">${price.toFixed(2)}</p>
+                        </div>
+                        {isUpgrade && creditAmount > 0 && (
+                            <div className="flex justify-between items-center text-green-600">
+                                <p>Credit from Plus plan</p>
+                                <p className="font-semibold">-${creditAmount.toFixed(2)}</p>
+                            </div>
+                        )}
+                        <Separator />
+                        <div className="flex justify-between items-center text-lg">
+                            <p className="font-bold">Total Due Today</p>
+                            <p className="font-bold">${finalPrice.toFixed(2)}</p>
+                        </div>
                     </div>
+
                 </CardContent>
                 <CardFooter>
                     <Button onClick={handleConfirm} disabled={isProcessing} className="w-full">
