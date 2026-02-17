@@ -162,7 +162,7 @@ export default function ProfilePage() {
                 fileToProcess = new File([convertedBlob], newFileName, { type: 'image/jpeg' });
             }
 
-            const resizedDataUrl = await resizeImage(fileToProcess, 96, 96);
+            const resizedDataUrl = await resizeImage(fileToProcess, 256, 256);
 
             // The updateProfile call can be too restrictive on data URL length.
             // Since the app prioritizes the Firestore photoURL anyway, we can rely solely on that.
