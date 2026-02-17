@@ -107,17 +107,28 @@ export function AuctionTimerBar({ startDate, endDate, isCard = false }: AuctionT
     textColor = "text-blue-600";
   }
 
-  // --- Common View for both card and detail ---
-  const displayText = isEnded ? 'Auction Ended' : (isUpcoming ? `Starts in ${timeLeft}` : `Ends in ${timeLeft}`);
+  if (isCard) {
+    const displayText = isEnded ? 'Auction Ended' : (isUpcoming ? `Starts in ${timeLeft}` : `Ends in ${timeLeft}`);
+    return (
+      <div className="w-full flex items-center gap-1.5 justify-start text-xs h-6">
+          <Clock className="w-3.5 h-3.5" />
+          <span className={cn("font-medium font-mono tracking-tighter", textColor)}>
+              {displayText}
+          </span>
+      </div>
+    );
+  }
 
+  // New rendering for detail view (!isCard)
+  const prefix = isEnded ? 'Auction' : (isUpcoming ? `Starts in` : `Ends in`);
+  const timeValue = isEnded ? 'Ended' : timeLeft;
+  
   return (
-    <div className={cn(
-        "w-full flex items-center gap-1.5",
-        isCard ? "justify-start text-xs h-6" : "justify-start text-sm"
-    )}>
-        <Clock className={cn("w-3.5 h-3.5", !isCard && "w-4 h-4")} />
-        <span className={cn("font-medium font-mono tracking-tighter", textColor)}>
-            {displayText}
+    <div className="w-full flex items-baseline gap-2 text-sm">
+        <Clock className="w-4 h-4 text-muted-foreground shrink-0" />
+        <span className="text-muted-foreground">{prefix}</span>
+        <span className={cn("font-bold text-lg font-mono tracking-tight", textColor)}>
+            {timeValue}
         </span>
     </div>
   )
