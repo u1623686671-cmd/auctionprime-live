@@ -14,7 +14,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription }
 import { Badge } from '@/components/ui/badge';
 import Loading from './loading';
 import { Separator } from '@/components/ui/separator';
-import { useIsMobile } from '@/hooks/use-is-mobile';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 
 const accountNavItems = [
@@ -241,4 +241,5 @@ export default function ProfilePage() {
             </div>
         </div>
     );
-}
+
+    
