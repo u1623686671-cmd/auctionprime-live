@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/card";
 import { BiddingForm } from "@/components/auctions/bidding-form";
 import { AIValuation } from "@/components/alcohol/ai-valuation";
-import { Gavel, Tag, Users, TrendingUp, Gem, Palette, CreditCard, Phone, Shirt, Wand2 } from "lucide-react";
+import { Gavel, Tag, TrendingUp, Gem, Palette, CreditCard, Phone, Shirt, Wand2 } from "lucide-react";
 import { formatDistanceToNow, isPast } from "date-fns";
 import { BiddingHistory } from "@/components/auctions/bidding-history";
 import { LoadingGavel } from "@/components/ui/loading-gavel";
@@ -91,24 +91,21 @@ export function AuctionDetailView({ itemId, category }: AuctionDetailViewProps) 
     const sessionViewKey = `viewed-item-${itemId}`;
     const hasBeenViewedInSession = sessionStorage.getItem(sessionViewKey);
 
-    if (!hasBeenViewedInSession) {
-      // Mark as viewed immediately to prevent duplicate updates on re-renders
-      sessionStorage.setItem(sessionViewKey, 'true');
+    if (!hasBeenViewedInSession && user) {
+        // Mark as viewed immediately to prevent duplicate updates on re-renders
+        sessionStorage.setItem(sessionViewKey, 'true');
 
-      // Perform the database update asynchronously.
-      updateDoc(itemRef, {
-        viewCount: increment(1),
-      }).catch((err) => {
-        // This is a non-critical background task. We can report it for debugging
-        // but we don't need to show it to the user. The sessionStorage flag
-        // will prevent further attempts in this session anyway.
-        const permissionError = new FirestorePermissionError({
-          path: itemRef.path,
-          operation: 'update',
-          requestResourceData: { viewCount: 'increment(1)' },
+        // Perform the database update asynchronously.
+        updateDoc(itemRef, {
+            viewCount: increment(1)
+        }).catch(err => {
+            const permissionError = new FirestorePermissionError({
+                path: itemRef.path,
+                operation: 'update',
+                requestResourceData: { viewCount: 'increment(1)' }
+            });
+            errorEmitter.emit('permission-error', permissionError);
         });
-        errorEmitter.emit('permission-error', permissionError);
-      });
     }
   }, [firestore, itemRef, itemId, user]); // Added user dependency
 
@@ -187,7 +184,7 @@ export function AuctionDetailView({ itemId, category }: AuctionDetailViewProps) 
   const renderDetails = () => {
       const commonDetails = (
           <>
-            <div className="flex items-center gap-2"><Users className="w-4 h-4 text-muted-foreground"/> Bids: <span className="font-semibold">{item.bidCount}</span></div>
+            <div className="flex items-center gap-2"><Gavel className="w-4 h-4 text-muted-foreground"/> Bids: <span className="font-semibold">{item.bidCount}</span></div>
             <div className="flex items-center gap-2"><TrendingUp className="w-4 h-4 text-muted-foreground"/> Increment: <span className="font-semibold">${item.minimumBidIncrement.toLocaleString()}</span></div>
           </>
       );

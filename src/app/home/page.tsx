@@ -7,7 +7,7 @@ import Link from "next/link";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { useUser, useFirestore, useCollection, useDoc, useMemoFirebase, useAuth } from "@/firebase";
 import { signOut } from "firebase/auth";
-import { DollarSign, Calendar, Loader2, ShoppingBag, Gavel, Hand, Search, Users, Wine, Gem, Palette, CreditCard, Phone, Home, LayoutGrid, Plus, ChevronRight, Shirt, Zap, User, LogOut, X, LogIn, Star } from "lucide-react";
+import { DollarSign, Calendar, Loader2, ShoppingBag, Gavel, Hand, Search, Wine, Gem, Palette, CreditCard, Phone, Home, LayoutGrid, Plus, ChevronRight, Shirt, Zap, User, LogOut, X, LogIn, Star } from "lucide-react";
 import { format, isPast } from "date-fns";
 import {
   Tabs,
@@ -626,7 +626,7 @@ export default function HomePage() {
                                 </Badge>
                             )}
                             <Badge variant="outline" className="absolute bottom-2 right-2 z-10 flex items-center gap-1 bg-black/50 text-white backdrop-blur-sm border-none text-xs">
-                                <Users className="h-3 w-3" />
+                                <Gavel className="h-3 w-3" />
                                 {item.bidCount || 0}
                             </Badge>
                             {item.isFlashAuction && (
