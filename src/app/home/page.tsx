@@ -66,6 +66,7 @@ type BaseAuctionDoc = {
   minimumBidIncrement: number;
   isFlashAuction?: boolean;
   isPromoted?: boolean;
+  viewCount?: number;
 };
 
 type AlcoholDoc = BaseAuctionDoc & {
@@ -249,11 +250,7 @@ export default function HomePage() {
   
   const topPicks = useMemo(() => {
     return [...allLiveItems]
-        .sort((a, b) => {
-            if (a.isPromoted && !b.isPromoted) return -1;
-            if (!a.isPromoted && b.isPromoted) return 1;
-            return (b.bidCount || 0) - (a.bidCount || 0)
-        });
+        .sort((a, b) => (b.viewCount || 0) - (a.viewCount || 0));
   }, [allLiveItems]);
 
   const upcomingItems = useMemo(() => {
@@ -451,7 +448,7 @@ export default function HomePage() {
                 const status = getStatus();
                 
                 return (
-                    <Card key={item.id} onClick={() => handleItemSelect({ id: item.id, category: collectionName })} className={cn("shadow-lg bg-card cursor-pointer hover:bg-muted/50 transition-colors", item.isPromoted ? "" : "overflow-hidden")}>
+                    <Card key={item.id} onClick={() => handleItemSelect({ id: item.id, category: collectionName })} className={cn("shadow-lg bg-card cursor-pointer hover:bg-muted/50 transition-colors", !item.isPromoted && "overflow-hidden")}>
                         <CardContent className="p-4 pb-0">
                             <div className="flex flex-col sm:flex-row gap-4">
                                 <div className="w-full sm:w-24 shrink-0">
@@ -608,7 +605,7 @@ export default function HomePage() {
                 }
 
                 return (
-                    <Card key={item.id} onClick={() => handleItemSelect({ id: item.id, category: collectionName })} className={cn("w-[45vw] sm:w-48 shrink-0 flex flex-col cursor-pointer group h-full shadow-lg transition-colors hover:bg-muted/50", item.isPromoted ? "" : "overflow-hidden")}>
+                    <Card key={item.id} onClick={() => handleItemSelect({ id: item.id, category: collectionName })} className={cn("w-[45vw] sm:w-48 shrink-0 flex flex-col cursor-pointer group h-full shadow-lg transition-colors", !item.isPromoted && "overflow-hidden")}>
                         <CardContent className="p-0">
                            <div className={cn("relative group/image flex items-center justify-center", 'aspect-square', isPlate || isPhoneNumber ? '' : 'bg-muted', !item.isPromoted && "overflow-hidden")}>
                                 {isPlate ? (
