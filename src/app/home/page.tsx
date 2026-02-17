@@ -404,15 +404,23 @@ export default function HomePage() {
         return (
             <div className="flex gap-4 overflow-x-auto pb-4 -mx-4 px-4">
                 {Array.from({ length: 4 }).map((_, index) => (
-                    <div key={index} className="w-[45vw] sm:w-48 shrink-0 flex flex-col cursor-pointer group h-full">
-                        <Skeleton className="w-full h-auto aspect-square rounded-lg"/>
-                        <div className="flex-1 flex flex-col p-3 space-y-2">
-                             <Skeleton className="h-5 w-3/4" />
-                             <Skeleton className="h-4 w-1/2" />
-                             <Skeleton className="h-5 w-16" />
-                             <Skeleton className="h-4 w-20" />
+                    <Card key={index} className="w-[45vw] sm:w-48 shrink-0 overflow-hidden">
+                        <CardContent className="p-0">
+                           <Skeleton className="w-full h-auto aspect-square rounded-none"/>
+                        </CardContent>
+                        <div className="p-3 space-y-2">
+                             <Skeleton className="h-4 w-3/4" />
+                             <Skeleton className="h-3 w-1/2" />
+                             <Skeleton className="h-3 w-16" />
+                             <div className="grid grid-cols-2 gap-2 pt-2 border-t mt-2">
+                                <div><Skeleton className="h-3 w-12" /><Skeleton className="h-4 w-16 mt-1" /></div>
+                                <div><Skeleton className="h-3 w-12" /><Skeleton className="h-4 w-16 mt-1" /></div>
+                             </div>
                         </div>
-                    </div>
+                         <CardFooter className="p-3 pt-0">
+                            <Skeleton className="h-9 w-full" />
+                         </CardFooter>
+                    </Card>
                 ))}
             </div>
         )
@@ -447,8 +455,8 @@ export default function HomePage() {
                 }
 
                 return (
-                    <div key={item.id} onClick={() => handleItemSelect({ id: item.id, category: collectionName })} className="w-[45vw] sm:w-48 shrink-0 flex flex-col cursor-pointer group h-full">
-                        <div className={cn("p-0 relative overflow-hidden rounded-md", !(isPlate || isPhoneNumber) && "border bg-card")}>
+                    <Card key={item.id} onClick={() => handleItemSelect({ id: item.id, category: collectionName })} className="w-[45vw] sm:w-48 shrink-0 flex flex-col cursor-pointer group h-full overflow-hidden shadow-lg hover:bg-muted/50 transition-colors">
+                        <CardContent className="p-0">
                            <div className={cn("relative group/image overflow-hidden flex items-center justify-center", 'aspect-square', isPlate || isPhoneNumber ? '' : 'bg-muted')}>
                                 {isPlate ? (
                                 <div className="w-full h-full flex items-center justify-center">
@@ -489,7 +497,7 @@ export default function HomePage() {
                                 isWatchlistLoading={isWatchlistLoading || isUserLoading}
                             />
                             </div>
-                        </div>
+                        </CardContent>
                         <div className="flex-1 flex flex-col p-3 space-y-2">
                             <div>
                                 <h3 className="font-headline text-base font-bold mb-1 leading-tight truncate group-hover:underline">{title}</h3>
@@ -499,35 +507,42 @@ export default function HomePage() {
                             <div className="flex-grow" />
 
                             <div className="space-y-3">
-                                <div className="text-base font-semibold text-foreground">${((status === 'upcoming' ? item.startingBid : item.currentBid) ?? 0).toLocaleString()}</div>
                                 <AuctionTimerBar startDate={item.auctionStartDate} endDate={item.auctionEndDate} isCard />
-                                <Button
-                                    variant="default"
-                                    size="sm"
-                                    onClick={(e) => { e.stopPropagation(); handleItemSelect({ id: item.id, category: collectionName })}}
-                                    className={cn(
-                                        "w-full",
-                                        status === 'completed' 
-                                            ? 'bg-muted text-muted-foreground hover:bg-muted cursor-not-allowed' 
-                                            : 'bg-accent text-accent-foreground hover:bg-accent/90'
-                                    )}
-                                    disabled={status === 'completed'}
-                                >
-                                    {status === 'live' ? <Gavel className="mr-2 h-4 w-4" /> : status === 'upcoming' ? <LogIn className="mr-2 h-4 w-4" /> : <Gavel className="mr-2 h-4 w-4"/>}
-                                    <span>
-                                        {status === 'live' ? 'Bid Now' : status === 'upcoming' ? 'View Item' : 'Auction Ended'}
-                                    </span>
-                                </Button>
+
+                                <div className="grid grid-cols-2 gap-2 pt-2 border-t text-left">
+                                     <div>
+                                        <p className="text-xs text-muted-foreground">Starting Bid</p>
+                                        <p className="text-sm font-semibold">${(item.startingBid ?? 0).toLocaleString()}</p>
+                                    </div>
+                                     <div>
+                                        <p className="text-xs text-muted-foreground">Current Bid</p>
+                                        <p className="text-sm font-semibold">${(item.currentBid ?? 0).toLocaleString()}</p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                        <CardFooter className="p-3 pt-0">
+                             <Button
+                                onClick={(e) => { e.stopPropagation(); handleItemSelect({ id: item.id, category: collectionName })}}
+                                size="sm"
+                                variant="outline"
+                                className="w-full"
+                                disabled={status === 'completed'}
+                            >
+                                {status === 'live' ? <Gavel className="mr-2 h-4 w-4" /> : <LogIn className="mr-2 h-4 w-4" />}
+                                <span>
+                                    {status === 'live' ? 'Bid Now' : status === 'upcoming' ? 'View Item' : 'Auction Ended'}
+                                </span>
+                            </Button>
+                        </CardFooter>
+                    </Card>
                 );
             })}
             {items.length > 12 && viewAllLink && (
                 <div key="view-all" className="w-[45vw] sm:w-48 shrink-0">
                     <Link href={viewAllLink} className="h-full block group">
-                        <div className="h-full flex flex-col overflow-hidden">
-                            <div className="flex-grow flex flex-col justify-center items-center">
+                        <Card className="h-full flex flex-col overflow-hidden shadow-lg hover:bg-muted/50 transition-colors">
+                            <CardContent className="flex-grow flex flex-col justify-center items-center">
                                 <div className="relative w-full aspect-square flex items-center justify-center p-4">
                                     {items.slice(0, 3).reverse().map((item, index) => {
                                         const collectionName = item.category;
@@ -567,12 +582,14 @@ export default function HomePage() {
                                         );
                                     })}
                                 </div>
-                                <div className="flex-shrink-0 flex flex-row items-center justify-center text-center py-2 px-3 gap-1">
+                            </CardContent>
+                             <CardFooter className="p-3">
+                                <div className="flex flex-row items-center justify-center text-center gap-1 w-full">
                                     <p className="font-semibold text-base">See More</p>
                                     <ChevronRight className="h-5 w-5 text-muted-foreground" />
                                 </div>
-                            </div>
-                        </div>
+                            </CardFooter>
+                        </Card>
                     </Link>
                 </div>
             )}
