@@ -1,3 +1,4 @@
+
 "use client";
 
 import Image from "next/image";
@@ -40,6 +41,7 @@ type LiveItemData = {
     userId: string;
     winnerId?: string;
     highestBidderId?: string;
+    isPromoted?: boolean;
 }
 
 async function getOrCreateChat(
@@ -259,6 +261,7 @@ export function MyBidItemCard({ item, onStatusUpdate, onItemSelect, className }:
     const currentHighestBid = liveItemData?.currentBid;
 
     const currentStatus = status;
+    const isPromoted = liveItemData?.isPromoted;
 
     if (currentStatus === 'Loading') {
         return (
@@ -282,12 +285,20 @@ export function MyBidItemCard({ item, onStatusUpdate, onItemSelect, className }:
     }
 
     return (
-        <Card onClick={onItemSelect} className={cn("overflow-hidden shadow-lg bg-card cursor-pointer", className)}>
+        <Card onClick={onItemSelect} className={cn(
+            "shadow-lg bg-card cursor-pointer",
+            !isPromoted && "overflow-hidden",
+            isPromoted && "ring-2 ring-accent bg-accent/10",
+            className
+        )}>
             <CardContent className="p-4 pb-0">
                 <div className="flex flex-col sm:flex-row gap-4">
                     <div className="w-full sm:w-24 shrink-0">
                         {isPlate || isPhoneNumber ? (
-                            <div className="relative rounded-md overflow-hidden group bg-muted aspect-square flex items-center justify-center">
+                            <div className={cn(
+                                "relative rounded-md group bg-muted aspect-square flex items-center justify-center",
+                                !isPromoted && "overflow-hidden"
+                            )}>
                                 {isPlate ? (
                                     <LebanesePlateDisplay plateNumber={item.itemTitle} />
                                 ) : (
@@ -295,7 +306,10 @@ export function MyBidItemCard({ item, onStatusUpdate, onItemSelect, className }:
                                 )}
                             </div>
                         ) : (
-                            <div className="aspect-square relative rounded-md overflow-hidden group">
+                            <div className={cn(
+                                "aspect-square relative rounded-md group",
+                                !isPromoted && "overflow-hidden"
+                            )}>
                                 <Image
                                     src={item.itemImageUrl}
                                     alt={item.itemTitle}
