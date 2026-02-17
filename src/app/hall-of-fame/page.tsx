@@ -66,11 +66,7 @@ const UserLineItem = ({ rank, user, value, valueLabel }: { rank: number; user: {
     }
 
     return (
-        <div className={cn("flex items-center justify-between gap-4 p-4",
-            rank === 1 && "bg-amber-400/10",
-            rank === 2 && "bg-slate-400/10",
-            rank === 3 && "bg-amber-700/10",
-        )}>
+        <div className={cn("flex items-center justify-between gap-4 p-4")}>
             <div className="flex items-center gap-4">
                 <div className="flex h-10 w-10 items-center justify-center font-bold text-muted-foreground shrink-0">{rankContent}</div>
                 <Avatar>
@@ -117,11 +113,7 @@ const TopListingItem = ({ listing, rank }: { listing: AnyListing, rank: number }
     else rankContent = <span className="font-bold text-lg">{rank}</span>;
 
     return (
-        <div className={cn("flex items-center justify-between gap-4 p-4",
-            rank === 1 && "bg-amber-400/10",
-            rank === 2 && "bg-slate-400/10",
-            rank === 3 && "bg-amber-700/10",
-        )}>
+        <div className={cn("flex items-center justify-between gap-4 p-4")}>
             <div className="flex items-center gap-4">
                 <div className="flex h-10 w-10 items-center justify-center font-bold text-muted-foreground shrink-0">{rankContent}</div>
                 <Link href={`/${listing.collection}/${listing.id}`} className="flex items-center gap-4 group">
