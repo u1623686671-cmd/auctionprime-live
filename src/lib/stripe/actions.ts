@@ -1,3 +1,4 @@
+
 'use server';
 
 import { stripe } from '@/lib/stripe';
@@ -20,17 +21,17 @@ type BillingCycle = 'monthly' | 'yearly';
 // ============================================================================
 const SUBSCRIPTION_PRICE_IDS: Record<Exclude<Plan, 'free'>, Record<BillingCycle, string>> = {
     plus: {
-        monthly: 'price_REPLACE_WITH_YOUR_PLUS_MONTHLY_PRICE_ID',
-        yearly: 'price_REPLACE_WITH_YOUR_PLUS_YEARLY_PRICE_ID',
+        monthly: process.env.STRIPE_PLUS_MONTHLY_ID!,
+        yearly: process.env.STRIPE_PLUS_YEARLY_ID!,
     },
     ultimate: {
-        monthly: 'price_REPLACE_WITH_YOUR_ULTIMATE_MONTHLY_PRICE_ID',
-        yearly: 'price_REPLACE_WITH_YOUR_ULTIMATE_YEARLY_PRICE_ID',
+        monthly: process.env.STRIPE_ULTIMATE_MONTHLY_ID!,
+        yearly: process.env.STRIPE_ULTIMATE_YEARLY_ID!,
     },
 };
 
-const TOKEN_PRICE_ID = 'price_REPLACE_WITH_YOUR_TOKEN_PRICE_ID'; // A one-time price for 1 token at $2.00
-const BOOST_PRICE_ID = 'price_REPLACE_WITH_YOUR_BOOST_PRICE_ID'; // A one-time price for 1 boost at $1.00
+const TOKEN_PRICE_ID = process.env.STRIPE_TOKEN_PRICE_ID!; // A one-time price for 1 token at $2.00
+const BOOST_PRICE_ID = process.env.STRIPE_BOOST_PRICE_ID!; // A one-time price for 1 boost at $1.00
 
 
 async function getOrCreateStripeCustomerId(userId: string, email: string): Promise<string> {
@@ -75,8 +76,8 @@ export async function createCheckoutSession(
 
     const priceId = SUBSCRIPTION_PRICE_IDS[plan][billingCycle];
 
-    if (!priceId.startsWith('price_')) {
-        throw new Error('Stripe price IDs are not configured. Please update src/lib/stripe/actions.ts');
+    if (!priceId || !priceId.startsWith('price_')) {
+        throw new Error('Stripe subscription price IDs are not configured correctly in your environment variables.');
     }
 
     const customerId = await getOrCreateStripeCustomerId(user.uid, user.email!);
@@ -105,7 +106,8 @@ export async function createCheckoutSession(
 
 export async function createOneTimeCheckoutSession(
     product: 'token' | 'boost',
-    quantity: number = 1
+    quantity: number = 1,
+    boostMetadata?: { itemId: string; itemCategory: string }
 ): Promise<void> {
      const user = auth.currentUser;
     if (!user) {
@@ -113,10 +115,16 @@ export async function createOneTimeCheckoutSession(
     }
 
     const priceId = product === 'token' ? TOKEN_PRICE_ID : BOOST_PRICE_ID;
-    const successPath = product === 'token' ? '/retailer/dashboard?payment_success=true' : '/retailer/dashboard?payment_success=true';
+    const successPath = product === 'token' 
+        ? '/retailer/dashboard?payment_success=true'
+        : `/${boostMetadata?.itemCategory}/${boostMetadata?.itemId}?boost_success=true`;
+    
+    if (product === 'boost' && !boostMetadata) {
+        throw new Error("Item information is required to boost a listing.");
+    }
 
-    if (!priceId.startsWith('price_')) {
-        throw new Error('Stripe price IDs for one-time products are not configured.');
+    if (!priceId || !priceId.startsWith('price_')) {
+        throw new Error('Stripe one-time product price IDs are not configured correctly in your environment variables.');
     }
     
     const customerId = await getOrCreateStripeCustomerId(user.uid, user.email!);
@@ -130,11 +138,15 @@ export async function createOneTimeCheckoutSession(
             quantity: quantity,
         }],
         success_url: `${process.env.NEXT_PUBLIC_URL}${successPath}`,
-        cancel_url: `${process.env.NEXT_PUBLIC_URL}${successPath.split('?')[0]}`,
+        cancel_url: `${process.env.NEXT_PUBLIC_URL}${product === 'token' ? '/profile/buy-tokens' : `/${boostMetadata?.itemCategory}/${boostMetadata?.itemId}`}`,
          metadata: {
             firebaseUID: user.uid,
             productType: product,
-            quantity: quantity,
+            quantity: String(quantity),
+            ...(product === 'boost' && boostMetadata ? {
+                itemId: boostMetadata.itemId,
+                itemCategory: boostMetadata.itemCategory,
+            } : {}),
         }
     });
      if (checkoutSession.url) {

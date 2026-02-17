@@ -39,6 +39,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { ChatWithWinnerButton } from "@/components/retailer/chat-with-winner-button";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { createOneTimeCheckoutSession } from "@/lib/stripe/actions";
 
 
 // --- Type Definitions for Listings ---
@@ -262,7 +263,6 @@ export default function MyListingsPage() {
             const hasFreePromotion = (userProfile.isPlusUser || userProfile.isUltimateUser) && (userProfile.promotionTokens || 0) > 0;
 
             if (hasFreePromotion) {
-                // Use a free token
                 await runTransaction(firestore, async (transaction) => {
                     const userDoc = await transaction.get(userRef);
                     if (!userDoc.exists()) throw new Error("User not found");
@@ -279,17 +279,7 @@ export default function MyListingsPage() {
                     description: `"${getListingTitle(listing)}" is now promoted using a free token.`,
                 });
             } else {
-                // Simulate payment
-                toast({ title: "Processing $1.00 payment..." });
-                await new Promise(resolve => setTimeout(resolve, 1500));
-                
-                await updateDoc(itemRef, { isPromoted: true });
-
-                toast({
-                    variant: 'success',
-                    title: "Listing Promoted!",
-                    description: `"${getListingTitle(listing)}" is now promoted.`,
-                });
+                await createOneTimeCheckoutSession('boost', 1, { itemId: listing.id, itemCategory: listing.category });
             }
         } catch (e: any) {
             toast({

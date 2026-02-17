@@ -1,3 +1,4 @@
+
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { stripe } from '@/lib/stripe';
@@ -83,11 +84,20 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
         if (productType === 'token') {
             const currentTokens = userDoc.data()?.extendTokens || 0;
             await userRef.update({ extendTokens: currentTokens + quantity });
+            console.log(`Provisioned ${quantity} ${productType}(s) for user ${userId}`);
         } else if (productType === 'boost') {
-            const currentTokens = userDoc.data()?.promotionTokens || 0;
-            await userRef.update({ promotionTokens: currentTokens + quantity });
+            const itemId = metadata?.itemId;
+            const itemCategory = metadata?.itemCategory;
+
+            if (!itemId || !itemCategory) {
+                 console.error("No itemId or itemCategory in boost checkout session metadata.");
+                 return;
+            }
+
+            const itemRef = db.collection(itemCategory).doc(itemId);
+            await itemRef.update({ isPromoted: true });
+            console.log(`Boosted listing ${itemId} in ${itemCategory} for user ${userId}`);
         }
-        console.log(`Provisioned ${quantity} ${productType}(s) for user ${userId}`);
     }
 }
 

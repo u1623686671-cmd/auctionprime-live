@@ -1,10 +1,9 @@
 
 'use client';
 
-import { useUser, useFirestore } from "@/firebase";
+import { useUser } from "@/firebase";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { doc, runTransaction } from "firebase/firestore";
 import { Loader2, ArrowLeft, Coins, Minus, Plus, HelpCircle, ChevronsRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,10 +17,10 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import { Separator } from "@/components/ui/separator";
+import { createOneTimeCheckoutSession } from "@/lib/stripe/actions";
 
 export default function BuyTokensPage() {
     const { user, isUserLoading } = useUser();
-    const firestore = useFirestore();
     const router = useRouter();
     const { toast } = useToast();
     const [isAllowed, setIsAllowed] = useState(false);
@@ -41,40 +40,19 @@ export default function BuyTokensPage() {
     }, [isUserLoading, user, router]);
 
     const handlePurchase = async () => {
-        if (!user || !firestore) return;
+        if (!user) return;
         setIsSubmitting(true);
-
-        const userRef = doc(firestore, 'users', user.uid);
-
         try {
-            await runTransaction(firestore, async (transaction) => {
-                const userDoc = await transaction.get(userRef);
-                if (!userDoc.exists()) {
-                    throw new Error("User profile not found.");
-                }
-                const currentTokens = userDoc.data().extendTokens || 0;
-                const newTokens = currentTokens + quantity;
-                transaction.update(userRef, { extendTokens: newTokens });
-            });
-
-            // Simulate payment processing
-            await new Promise(resolve => setTimeout(resolve, 1000));
-
-            toast({
-                variant: 'success',
-                title: 'Purchase Successful!',
-                description: `You have purchased ${quantity} Extend Token(s).`,
-            });
-            router.push('/retailer/dashboard');
-
+            await createOneTimeCheckoutSession('token', quantity);
+            // User will be redirected to Stripe by the server action.
+            // On success, they land on the dashboard. On cancel, they return here.
         } catch (error: any) {
             toast({
                 variant: 'destructive',
                 title: 'Purchase Failed',
-                description: error.message || 'Could not complete your purchase.',
+                description: error.message || 'Could not redirect you to checkout.',
             });
-        } finally {
-            setIsSubmitting(false);
+            setIsSubmitting(false); // Only set loading to false on error
         }
     };
     
