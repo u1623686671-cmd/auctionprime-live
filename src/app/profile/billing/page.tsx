@@ -64,6 +64,29 @@ export default function BillingPage() {
         setIsProcessing(true);
 
         try {
+            const isUpgrade = userProfile.isPlusUser && planId === 'ultimate';
+            let proRataMessage = '';
+
+            if (isUpgrade && userProfile.subscriptionRenewalDate && userProfile.subscriptionBillingCycle) {
+                const plusRenewalDate = userProfile.subscriptionRenewalDate.toDate();
+                const now = new Date();
+                
+                const wasYearly = userProfile.subscriptionBillingCycle === 'yearly';
+                const pricePaid = wasYearly ? plans.plus.yearlyPrice : plans.plus.monthlyPrice;
+                const startDate = wasYearly ? add(plusRenewalDate, { years: -1 }) : add(plusRenewalDate, { months: -1 });
+
+                const totalDuration = plusRenewalDate.getTime() - startDate.getTime();
+                const timeUsed = now.getTime() - startDate.getTime();
+                
+                if (timeUsed < totalDuration) {
+                    const remainingRatio = 1 - (timeUsed / totalDuration);
+                    const creditAmount = pricePaid * remainingRatio;
+                    if (creditAmount > 0) {
+                      proRataMessage = ` A credit of $${creditAmount.toFixed(2)} for the remainder of your Plus plan has been applied to your account.`;
+                    }
+                }
+            }
+
             const renewalDate = billingCycle === 'monthly'
                 ? add(new Date(), { months: 1 })
                 : add(new Date(), { years: 1 });
@@ -88,7 +111,7 @@ export default function BillingPage() {
             toast({
                 variant: 'success',
                 title: 'Subscription Activated!',
-                description: `You have successfully subscribed to the ${planDetails.name} plan.`,
+                description: `You have successfully subscribed to the ${planDetails.name} plan.${proRataMessage}`,
             });
             
             router.push('/profile/subscription');
