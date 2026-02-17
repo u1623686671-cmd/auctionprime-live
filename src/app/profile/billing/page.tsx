@@ -192,12 +192,12 @@ export default function BillingPage() {
                     </div>
 
                     <div className="p-4 rounded-lg bg-secondary space-y-3">
-                         <div className="flex justify-between items-center">
+                         <div className="flex justify-between items-center text-sm">
                             <p className="text-muted-foreground">{planDetails.name} ({billingCycle})</p>
                             <p className="font-semibold">${price.toFixed(2)}</p>
                         </div>
                         {isUpgrade && creditAmount > 0 && (
-                            <div className="flex justify-between items-center text-green-600">
+                            <div className="flex justify-between items-center text-sm text-green-600">
                                 <p>Credit from Plus plan</p>
                                 <p className="font-semibold">-${creditAmount.toFixed(2)}</p>
                             </div>
