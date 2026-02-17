@@ -690,9 +690,9 @@ export default function HomePage() {
             })}
             {items.length > 12 && viewAllLink && (
                 <div key="view-all" className="w-[45vw] sm:w-48 shrink-0">
-                    <Link href={viewAllLink} className="h-full flex flex-col group p-3 justify-between">
-                        <div className="flex-grow flex flex-col justify-center items-center">
-                            <div className="relative w-full aspect-square flex items-center justify-center p-4">
+                    <Link href={viewAllLink} className="h-full flex flex-col group">
+                        <div className="p-0">
+                            <div className="relative w-full aspect-square flex items-center justify-center">
                                 {items.slice(0, 3).reverse().map((item, index) => {
                                     const collectionName = item.category;
                                     const isPlate = collectionName === 'plates';
@@ -733,10 +733,11 @@ export default function HomePage() {
                             </div>
                         </div>
                         <div className="p-3">
-                            <div className="flex flex-row items-center justify-center text-center gap-1 w-full">
-                                <p className="font-semibold text-base">See More</p>
+                            <h3 className="font-headline text-base font-bold mb-1 leading-tight truncate group-hover:underline flex items-center gap-1">
+                                See More
                                 <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                            </div>
+                            </h3>
+                            <p className="text-xs text-muted-foreground truncate">&nbsp;</p>
                         </div>
                     </Link>
                 </div>
