@@ -6,14 +6,13 @@ import { ArrowLeft, CheckCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
-import { doc } from 'firebase/firestore';
+import { doc, updateDoc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
 import { useState, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
-import { format } from "date-fns";
+import { format, add } from "date-fns";
 import { cn } from '@/lib/utils';
-import { createCheckoutSession, createCustomerPortalSession } from '@/lib/stripe/actions';
 import {
     AlertDialog,
     AlertDialogCancel,
@@ -39,38 +38,69 @@ export default function SubscriptionPage() {
   const { data: userProfile, isLoading: isUserProfileLoading } = useDoc(userProfileRef);
   
   const handleCheckout = async (plan: 'plus' | 'ultimate', cycle: 'monthly' | 'yearly') => {
-      if (!user || !user.email) return;
+      if (!user || !user.email || !userProfileRef || !userProfile) return;
       setIsProcessing(true);
       setProcessingPlan(`${plan}-${cycle}`);
       try {
-          await createCheckoutSession(user.uid, user.email, plan, cycle);
-          // The user will be redirected to Stripe by the server action.
+          const renewalDate = cycle === 'monthly' 
+              ? add(new Date(), { months: 1 }) 
+              : add(new Date(), { years: 1 });
+
+          const updateData: any = {
+              isPlusUser: plan === 'plus',
+              isUltimateUser: plan === 'ultimate',
+              subscriptionBillingCycle: cycle,
+              stripeSubscriptionId: `sub_bypassed_${Date.now()}`,
+              subscriptionRenewalDate: renewalDate,
+          };
+          
+          if(plan === 'plus'){
+              updateData.promotionTokens = (userProfile.promotionTokens || 0) + (cycle === 'monthly' ? 1 : 12);
+          }
+          else if (plan === 'ultimate'){
+              updateData.promotionTokens = (userProfile.promotionTokens || 0) + (cycle === 'monthly' ? 5 : 60);
+              updateData.extendTokens = (userProfile.extendTokens || 0) + (cycle === 'monthly' ? 10 : 120);
+          }
+
+          await updateDoc(userProfileRef, updateData);
+
+          toast({
+              variant: 'success',
+              title: 'Subscription Activated!',
+              description: `You have successfully subscribed to the ${plan} plan.`,
+          });
+          setPlanToUpgrade(null);
       } catch (error: any) {
           toast({
               variant: 'destructive',
-              title: 'Checkout Error',
-              description: error.message || 'Could not initiate the checkout process.',
+              title: 'Activation Error',
+              description: error.message || 'Could not activate the subscription.',
           });
+      } finally {
           setIsProcessing(false);
           setProcessingPlan(null);
       }
   }
 
   const handleManageBilling = async () => {
-      if (!user || !user.email) return;
-      setIsProcessing(true);
-      setProcessingPlan('manage');
-      try {
-          await createCustomerPortalSession(user.uid, user.email);
-      } catch (error: any) {
-          toast({
-              variant: 'destructive',
-              title: 'Error',
-              description: error.message || 'Could not open the billing portal.',
-          });
-          setIsProcessing(false);
-          setProcessingPlan(null);
-      }
+    if (!user || !user.email) return;
+    setIsProcessing(true);
+    setProcessingPlan('manage');
+    try {
+        toast({
+            title: 'Billing Management Disabled',
+            description: 'Stripe is currently bypassed for demonstration purposes.',
+        });
+    } catch (error: any) {
+        toast({
+            variant: 'destructive',
+            title: 'Error',
+            description: error.message || 'Could not open the billing portal.',
+        });
+    } finally {
+        setIsProcessing(false);
+        setProcessingPlan(null);
+    }
   }
 
 
@@ -258,11 +288,11 @@ export default function SubscriptionPage() {
            <CardFooter>
                 <Button 
                     onClick={() => setPlanToUpgrade('plus')}
-                    disabled={isProcessing} 
+                    disabled={isProcessing || isPlusUser} 
                     className="w-full bg-sky-500 text-white hover:bg-sky-500/90"
                 >
                     {isProcessing && processingPlan?.startsWith('plus') && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
-                    Upgrade to Plus
+                    {isPlusUser ? 'Current Plan' : 'Upgrade to Plus'}
                 </Button>
           </CardFooter>
         </Card>
@@ -299,11 +329,11 @@ export default function SubscriptionPage() {
           <CardFooter>
                 <Button 
                     onClick={() => setPlanToUpgrade('ultimate')}
-                    disabled={isProcessing}
+                    disabled={isProcessing || isUltimateUser}
                     className="w-full bg-purple-500 text-white hover:bg-purple-500/90"
                 >
                     {isProcessing && processingPlan?.startsWith('ultimate') && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
-                    Upgrade to Ultimate
+                    {isUltimateUser ? 'Current Plan' : 'Upgrade to Ultimate'}
                 </Button>
           </CardFooter>
         </Card>

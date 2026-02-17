@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useUser } from "@/firebase";
+import { useUser, useFirestore } from "@/firebase";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Loader2, ArrowLeft, Coins, Minus, Plus, HelpCircle, ChevronsRight } from "lucide-react";
@@ -17,10 +17,11 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import { Separator } from "@/components/ui/separator";
-import { createOneTimeCheckoutSession } from "@/lib/stripe/actions";
+import { doc, updateDoc, increment } from "firebase/firestore";
 
 export default function BuyTokensPage() {
     const { user, isUserLoading } = useUser();
+    const firestore = useFirestore();
     const router = useRouter();
     const { toast } = useToast();
     const [isAllowed, setIsAllowed] = useState(false);
@@ -40,19 +41,26 @@ export default function BuyTokensPage() {
     }, [isUserLoading, user, router]);
 
     const handlePurchase = async () => {
-        if (!user || !user.email) return;
+        if (!user) return;
         setIsSubmitting(true);
         try {
-            await createOneTimeCheckoutSession(user.uid, user.email, 'token', quantity);
-            // User will be redirected to Stripe by the server action.
-            // On success, they land on the dashboard. On cancel, they return here.
+            const userRef = doc(firestore, 'users', user.uid);
+            await updateDoc(userRef, {
+                extendTokens: increment(quantity)
+            });
+            toast({
+                variant: 'success',
+                title: 'Purchase Successful!',
+                description: `You have received ${quantity} extend token(s).`,
+            });
+            router.push('/retailer/dashboard');
         } catch (error: any) {
             toast({
                 variant: 'destructive',
                 title: 'Purchase Failed',
-                description: error.message || 'Could not redirect you to checkout.',
+                description: error.message || 'Could not complete the purchase.',
             });
-            setIsSubmitting(false); // Only set loading to false on error
+            setIsSubmitting(false);
         }
     };
     

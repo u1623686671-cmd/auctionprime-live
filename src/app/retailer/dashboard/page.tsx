@@ -39,7 +39,6 @@ import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { ChatWithWinnerButton } from "@/components/retailer/chat-with-winner-button";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { createOneTimeCheckoutSession } from "@/lib/stripe/actions";
 
 
 // --- Type Definitions for Listings ---
@@ -253,7 +252,7 @@ export default function MyListingsPage() {
     }
     
     const handleBoostListing = async (listing: AnyListing) => {
-        if (!user || !user.email || !userProfile) return;
+        if (!user || !user.email || !userProfile || !firestore) return;
         setBoostingItemId(listing.id);
 
         const userRef = doc(firestore, 'users', user.uid);
@@ -279,7 +278,12 @@ export default function MyListingsPage() {
                     description: `"${getListingTitle(listing)}" is now promoted using a free token.`,
                 });
             } else {
-                await createOneTimeCheckoutSession(user.uid, user.email, 'boost', 1, { itemId: listing.id, itemCategory: listing.category });
+                await updateDoc(itemRef, { isPromoted: true });
+                 toast({
+                    variant: 'success',
+                    title: "Listing Promoted!",
+                    description: `"${getListingTitle(listing)}" is now promoted. (Stripe bypassed)`,
+                });
             }
         } catch (e: any) {
             toast({
