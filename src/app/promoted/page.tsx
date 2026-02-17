@@ -200,7 +200,7 @@ export default function PromotedPage() {
                 const status = getStatus();
                 
                 return (
-                    <Card key={item.id} onClick={() => handleItemSelect({ id: item.id, category: collectionName })} className="overflow-hidden shadow-lg bg-card cursor-pointer hover:bg-muted/50 transition-colors">
+                    <Card key={item.id} onClick={() => handleItemSelect({ id: item.id, category: collectionName })} className={cn("shadow-lg bg-card cursor-pointer hover:bg-muted/50 transition-colors", !item.isPromoted && 'overflow-hidden', item.isPromoted && "ring-2 ring-offset-background ring-sky-500 shadow-lg shadow-sky-500/40")}>
                         <CardContent className="p-4 pb-0">
                             <div className="flex flex-col sm:flex-row gap-4">
                                 <div className="w-full sm:w-24 shrink-0">

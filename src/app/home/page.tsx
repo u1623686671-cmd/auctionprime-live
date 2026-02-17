@@ -227,7 +227,7 @@ export default function HomePage() {
 
         // both live, sort by end date ascending (soonest to end first)
         if (aIsLive && bIsLive) {
-            return new Date(a.auctionEndDate).getTime() - new Date(b.auctionEndDate).getTime();
+            return new Date(a.auctionEndDate).getTime() - new Date(a.auctionEndDate).getTime();
         }
 
         // both upcoming, sort by start date ascending (soonest to start first)
@@ -455,7 +455,7 @@ export default function HomePage() {
                 }
 
                 return (
-                    <Card key={item.id} onClick={() => handleItemSelect({ id: item.id, category: collectionName })} className={cn("w-[45vw] sm:w-48 shrink-0 flex flex-col cursor-pointer group h-full overflow-hidden shadow-lg hover:bg-muted/50 transition-colors", item.isPromoted && "ring-2 ring-offset-background ring-sky-500 shadow-xl shadow-sky-500/50")}>
+                    <Card key={item.id} onClick={() => handleItemSelect({ id: item.id, category: collectionName })} className={cn("w-[45vw] sm:w-48 shrink-0 flex flex-col cursor-pointer group h-full shadow-lg hover:bg-muted/50 transition-colors", !item.isPromoted && "overflow-hidden", item.isPromoted && "ring-2 ring-offset-background ring-sky-500 shadow-lg shadow-sky-500/40")}>
                         <CardContent className="p-0">
                            <div className={cn("relative group/image overflow-hidden flex items-center justify-center", 'aspect-square', isPlate || isPhoneNumber ? '' : 'bg-muted')}>
                                 {isPlate ? (
@@ -650,7 +650,7 @@ export default function HomePage() {
                 const status = getStatus();
                 
                 return (
-                    <Card key={item.id} onClick={() => handleItemSelect({ id: item.id, category: collectionName })} className="overflow-hidden shadow-lg bg-card cursor-pointer hover:bg-muted/50 transition-colors">
+                    <Card key={item.id} onClick={() => handleItemSelect({ id: item.id, category: collectionName })} className={cn("shadow-lg bg-card cursor-pointer hover:bg-muted/50 transition-colors", !item.isPromoted && 'overflow-hidden', item.isPromoted && "ring-2 ring-offset-background ring-sky-500 shadow-lg shadow-sky-500/40")}>
                         <CardContent className="p-4 pb-0">
                             <div className="flex flex-col sm:flex-row gap-4">
                                 <div className="w-full sm:w-24 shrink-0">
