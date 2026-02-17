@@ -238,7 +238,7 @@ export default function ProfilePage() {
             </header>
             <div className="space-y-8">
                 <Card className="overflow-hidden shadow-lg border-0">
-                    <div className="h-24 bg-gradient-to-r from-primary/10 via-secondary to-primary/10" />
+                    <div className="h-24 bg-gradient-to-r from-primary to-accent" />
                     <div className="relative p-6 pt-0">
                         <div className="flex justify-center -mt-12">
                             <div {...getRootProps()} className="relative w-24 h-24 rounded-full cursor-pointer group">
