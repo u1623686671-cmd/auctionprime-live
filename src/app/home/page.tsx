@@ -218,6 +218,10 @@ export default function HomePage() {
     });
     
     return items.sort((a, b) => {
+        // Promoted items first
+        if (a.isPromoted && !b.isPromoted) return -1;
+        if (!a.isPromoted && b.isPromoted) return 1;
+        
         const nowTime = now.getTime();
         const aIsLive = new Date(a.auctionStartDate).getTime() <= nowTime;
         const bIsLive = new Date(b.auctionStartDate).getTime() <= nowTime;
@@ -227,7 +231,7 @@ export default function HomePage() {
 
         // both live, sort by end date ascending (soonest to end first)
         if (aIsLive && bIsLive) {
-            return new Date(a.auctionEndDate).getTime() - new Date(a.auctionEndDate).getTime();
+            return new Date(a.auctionEndDate).getTime() - new Date(b.auctionEndDate).getTime();
         }
 
         // both upcoming, sort by start date ascending (soonest to start first)
@@ -245,7 +249,11 @@ export default function HomePage() {
   
   const topPicks = useMemo(() => {
     return [...allLiveItems]
-        .sort((a, b) => (b.bidCount || 0) - (a.bidCount || 0));
+        .sort((a, b) => {
+            if (a.isPromoted && !b.isPromoted) return -1;
+            if (!a.isPromoted && b.isPromoted) return 1;
+            return (b.bidCount || 0) - (a.bidCount || 0)
+        });
   }, [allLiveItems]);
 
   const upcomingItems = useMemo(() => {
@@ -257,7 +265,11 @@ export default function HomePage() {
   const flashAuctionItems = useMemo(() => {
     return allLiveItems
       .filter(item => item.isFlashAuction)
-      .sort((a, b) => (b.bidCount || 0) - (a.bidCount || 0));
+      .sort((a, b) => {
+        if (a.isPromoted && !b.isPromoted) return -1;
+        if (!a.isPromoted && b.isPromoted) return 1;
+        return (b.bidCount || 0) - (a.bidCount || 0)
+      });
   }, [allLiveItems]);
 
   const getItemTitleSubtitle = useCallback((item: any, type: string) => {
@@ -455,9 +467,9 @@ export default function HomePage() {
                 }
 
                 return (
-                    <Card key={item.id} onClick={() => handleItemSelect({ id: item.id, category: collectionName })} className="w-[45vw] sm:w-48 shrink-0 flex flex-col cursor-pointer group h-full overflow-hidden shadow-lg">
+                    <Card key={item.id} onClick={() => handleItemSelect({ id: item.id, category: collectionName })} className={cn("w-[45vw] sm:w-48 shrink-0 flex flex-col cursor-pointer group h-full shadow-lg transition-colors hover:bg-muted/50", item.isPromoted ? "border-accent" : "overflow-hidden")}>
                         <CardContent className="p-0">
-                           <div className={cn("relative group/image overflow-hidden flex items-center justify-center", 'aspect-square', isPlate || isPhoneNumber ? '' : 'bg-muted')}>
+                           <div className={cn("relative group/image flex items-center justify-center", 'aspect-square', isPlate || isPhoneNumber ? '' : 'bg-muted', item.isPromoted ? "" : "overflow-hidden")}>
                                 {isPlate ? (
                                 <div className="w-full h-full flex items-center justify-center">
                                     <LebanesePlateDisplay plateNumber={item.itemName} />
@@ -596,150 +608,6 @@ export default function HomePage() {
         </div>
     );
   };
-  
-  const renderAuctionGrid = (items: any[], type: string | null, isLoading: boolean) => {
-    if (isLoading) {
-        return (
-            <div className="grid grid-cols-1 gap-6">
-                {Array.from({ length: 6 }).map((_, index) => (
-                    <Card key={index} className="overflow-hidden shadow-lg">
-                        <CardContent className="p-4">
-                            <div className="flex flex-col sm:flex-row gap-4">
-                                <Skeleton className="w-full sm:w-24 h-auto aspect-square rounded-md shrink-0" />
-                                <div className="space-y-2 flex-1">
-                                    <Skeleton className="h-5 w-3/4" />
-                                    <Skeleton className="h-4 w-1/2" />
-                                    <Skeleton className="h-4 w-1/4" />
-                                    <div className="flex gap-4 pt-2 mt-auto">
-                                        <Skeleton className="h-8 w-24" />
-                                        <Skeleton className="h-8 w-24" />
-                                    </div>
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-                ))}
-            </div>
-        )
-    }
-    if (items.length === 0) {
-        let message = "No auctions found matching your criteria.";
-        if (type === null && !categorySearchTerm && categoryFilter === 'all') { // Only for the general categories tab empty state
-            message = "No live or upcoming auctions in this category at the moment.";
-        }
-        if (type === null && !categorySearchTerm && categoryFilter === 'all' && items.length === 0 && allItems.length === 0) {
-            message = "There are no live or upcoming auctions right now. Check back soon!";
-        }
-        return (
-            <div className="col-span-full text-center py-12 text-muted-foreground">{message}</div>
-        )
-    }
-    return (
-        <div className="grid grid-cols-1 gap-6">
-            {items.map((item) => {
-                const collectionName = type || item.category;
-                const { title, subtitle } = getItemTitleSubtitle(item, collectionName);
-                const isPlate = collectionName === 'plates';
-                const isPhoneNumber = collectionName === 'phoneNumbers';
-                
-                const getStatus = () => {
-                    if (isPast(new Date(item.auctionEndDate))) return 'completed';
-                    if (isPast(new Date(item.auctionStartDate))) return 'live';
-                    return 'upcoming';
-                }
-                const status = getStatus();
-                
-                return (
-                    <Card key={item.id} onClick={() => handleItemSelect({ id: item.id, category: collectionName })} className="shadow-lg bg-card cursor-pointer hover:bg-muted/50 transition-colors overflow-hidden">
-                        <CardContent className="p-4 pb-0">
-                            <div className="flex flex-col sm:flex-row gap-4">
-                                <div className="w-full sm:w-24 shrink-0">
-                                    <div className={cn("aspect-square relative rounded-md overflow-hidden group", isPlate || isPhoneNumber ? '' : 'bg-muted')}>
-                                        {isPlate ? (
-                                            <div className="w-full h-full flex items-center justify-center">
-                                                <LebanesePlateDisplay plateNumber={item.itemName} />
-                                            </div>
-                                        ) : isPhoneNumber ? (
-                                            <div className="w-full h-full flex items-center justify-center">
-                                                <PhoneNumberDisplay phoneNumber={item.itemName} />
-                                            </div>
-                                        ) : (
-                                            <Image src={(item.imageUrls && item.imageUrls[0]) || `https://picsum.photos/seed/${item.id}/800/600`} alt={title || 'Auction item'} data-ai-hint={collectionName} fill className="object-cover" />
-                                        )}
-                                        <WatchlistButton
-                                            itemId={item.id}
-                                            category={collectionName}
-                                            title={title || ''}
-                                            imageUrl={(item.imageUrls && item.imageUrls[0]) || ''}
-                                            auctionStartDate={item.auctionStartDate}
-                                            auctionEndDate={item.auctionEndDate}
-                                            className="absolute top-2 right-2 z-10"
-                                            isWatched={watchlistSet.has(item.id)}
-                                            isWatchlistLoading={isWatchlistLoading || isUserLoading}
-                                        />
-                                        {item.isPromoted && (
-                                            <Badge className="absolute bottom-2 left-2 z-10 flex items-center gap-1 border-transparent bg-accent text-accent-foreground text-xs hover:bg-accent/80">
-                                                <Star className="h-3 w-3" />
-                                                Sponsored
-                                            </Badge>
-                                        )}
-                                        {item.isFlashAuction && (
-                                            <Badge className="absolute top-2 left-2 z-10 flex items-center gap-1 bg-accent text-accent-foreground border border-accent-darker">
-                                                <Zap className="h-3 w-3" />
-                                                FLASH
-                                            </Badge>
-                                        )}
-                                    </div>
-                                </div>
-                    
-                                <div className="flex-grow flex flex-col">
-                                    <div className='flex-1 mb-2'>
-                                        <div className="flex justify-between items-start gap-1 mb-2">
-                                            <h3 className="font-bold text-base sm:text-lg font-headline leading-tight hover:underline flex-1">{title}</h3>
-                                            <div className="shrink-0 -mr-1 sm:ml-0">
-                                                 <Badge variant={status === 'live' ? 'default' : status === 'upcoming' ? 'secondary' : 'outline'} className="capitalize">{status}</Badge>
-                                            </div>
-                                        </div>
-                                        <p className="text-sm text-muted-foreground">{subtitle}</p>
-                                        <div className="mt-1">
-                                            <AuctionTimerBar startDate={item.auctionStartDate} endDate={item.auctionEndDate} isCard />
-                                        </div>
-                                    </div>
-                                    
-                                    <div className="grid grid-cols-2 gap-4 mt-auto pt-2 border-t mt-2">
-                                         <div>
-                                            <p className="text-xs text-muted-foreground">Starting Bid</p>
-                                            <p className="text-base font-semibold">${(item.startingBid ?? 0).toLocaleString()}</p>
-                                        </div>
-                                         <div>
-                                            <p className="text-xs text-muted-foreground">Current Bid</p>
-                                            <p className="text-base font-semibold">${(item.currentBid ?? 0).toLocaleString()}</p>
-                                        </div>
-                                   </div>
-                                </div>
-                            </div>
-                        </CardContent>
-                    
-                        <CardFooter className="p-4 flex flex-col sm:flex-row sm:justify-end gap-2">
-                            <Button
-                                onClick={(e) => { e.stopPropagation(); handleItemSelect({ id: item.id, category: collectionName })}}
-                                size="sm"
-                                variant="outline"
-                                className="w-full sm:w-auto"
-                                disabled={status === 'completed'}
-                            >
-                                {status === 'live' ? <Gavel className="mr-2 h-4 w-4" /> : <LogIn className="mr-2 h-4 w-4" />}
-                                <span>
-                                    {status === 'live' ? 'Bid Now' : status === 'upcoming' ? 'View Item' : 'Auction Ended'}
-                                </span>
-                            </Button>
-                        </CardFooter>
-                    </Card>
-                );
-            })}
-        </div>
-        );
-    };
   
   return (
     <div className="w-full">

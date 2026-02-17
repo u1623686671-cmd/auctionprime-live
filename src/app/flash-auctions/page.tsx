@@ -121,7 +121,11 @@ export default function FlashAuctionsPage() {
   const flashAuctionItems = useMemo(() => {
     let items = allLiveItems
       .filter(item => item.isFlashAuction)
-      .sort((a, b) => new Date(a.auctionEndDate).getTime() - new Date(b.auctionEndDate).getTime());
+      .sort((a, b) => {
+        if (a.isPromoted && !b.isPromoted) return -1;
+        if (!a.isPromoted && b.isPromoted) return 1;
+        return new Date(a.auctionEndDate).getTime() - new Date(b.auctionEndDate).getTime();
+      });
 
     if (searchTerm) {
         items = items.filter(item =>
@@ -201,11 +205,11 @@ export default function FlashAuctionsPage() {
                 const status = getStatus();
                 
                 return (
-                    <Card key={item.id} onClick={() => handleItemSelect({ id: item.id, category: collectionName })} className="shadow-lg bg-card cursor-pointer hover:bg-muted/50 transition-colors overflow-hidden">
+                    <Card key={item.id} onClick={() => handleItemSelect({ id: item.id, category: collectionName })} className={cn("shadow-lg bg-card cursor-pointer hover:bg-muted/50 transition-colors", item.isPromoted ? "border-accent" : "overflow-hidden")}>
                         <CardContent className="p-4 pb-0">
                             <div className="flex flex-col sm:flex-row gap-4">
                                 <div className="w-full sm:w-24 shrink-0">
-                                    <div className={cn("aspect-square relative rounded-md overflow-hidden group", isPlate || isPhoneNumber ? '' : 'bg-muted')}>
+                                    <div className={cn("aspect-square relative rounded-md group", isPlate || isPhoneNumber ? '' : 'bg-muted', item.isPromoted ? "" : "overflow-hidden")}>
                                         {isPlate ? (
                                             <div className="w-full h-full flex items-center justify-center">
                                                 <LebanesePlateDisplay plateNumber={item.itemName} />
