@@ -357,7 +357,7 @@ export default function MyListingsPage() {
                     const title = getListingTitle(listing);
                     const isExtending = extendingItemId === listing.id;
                     const extendCount = listing.extendCount || 0;
-                    const canExtend = userProfile?.isUltimateUser && (userProfile?.extendTokens || 0) > 0 && extendCount < 3;
+                    const canExtend = (userProfile?.extendTokens || 0) > 0 && extendCount < 3;
                     const tokensLeft = userProfile?.extendTokens || 0;
                     const isBoosting = boostingItemId === listing.id;
                     const hasFreePromotion = userProfile?.isUltimateUser && (userProfile?.promotionTokens || 0) > 0;
@@ -437,48 +437,29 @@ export default function MyListingsPage() {
                                     )}
                                     {listing.status === 'live' && (
                                         <div className="flex flex-col gap-2 w-full">
-                                            {userProfile?.isUltimateUser ? (
-                                                <>
-                                                    <div className="text-center text-xs text-muted-foreground">
-                                                        You can extend this auction by 1 hour. You have {tokensLeft} token(s) left.
-                                                    </div>
-                                                    <div className="flex gap-2">
-                                                        <Button 
-                                                            variant="outline"
-                                                            size="sm"
-                                                            className="flex-1 border-purple-600 text-purple-600 hover:bg-purple-600/10 hover:text-purple-600 disabled:opacity-50"
-                                                            disabled={!canExtend || isExtending}
-                                                            onClick={(e) => {e.stopPropagation(); handleExtend(listing);}}
-                                                        >
-                                                            {isExtending ? <Loader2 className="h-4 w-4 animate-spin"/> : <Clock className="h-4 w-4"/>}
-                                                            Extend
-                                                        </Button>
-                                                        <Button onClick={() => handleItemSelect({ id: listing.id, category: listing.category })} variant="secondary" size="sm" className="flex-1">
-                                                            <LogIn className="h-4 w-4"/> View
-                                                        </Button>
-                                                    </div>
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <div className="text-center text-xs text-muted-foreground">
-                                                        Extend auction by 1 hour. <Link href="/profile/subscription"><span className="font-semibold text-purple-600 hover:underline cursor-pointer">(Ultimate plan required)</span></Link>
-                                                    </div>
-                                                    <div className="flex gap-2">
-                                                         <Button 
-                                                            variant="outline"
-                                                            size="sm"
-                                                            className="flex-1 border-purple-600 text-purple-600"
-                                                            disabled={true}
-                                                        >
-                                                            <Clock className="h-4 w-4"/>
-                                                            Extend
-                                                        </Button>
-                                                        <Button onClick={() => handleItemSelect({ id: listing.id, category: listing.category })} variant="secondary" size="sm" className="flex-1">
-                                                            <LogIn className="h-4 w-4"/> View
-                                                        </Button>
-                                                    </div>
-                                                </>
-                                            )}
+                                            <>
+                                                <div className="text-center text-xs text-muted-foreground">
+                                                    { extendCount >= 3 ? "Maximum extensions reached for this item." : 
+                                                    tokensLeft > 0 ? `You can extend this auction by 1 hour. You have ${tokensLeft} token(s) left.` :
+                                                    (<>Extend auction by 1 hour. <Link href="/profile/buy-tokens"><span className="font-semibold text-purple-600 hover:underline cursor-pointer">Buy tokens to extend.</span></Link></>)
+                                                    }
+                                                </div>
+                                                <div className="flex gap-2">
+                                                    <Button 
+                                                        variant="outline"
+                                                        size="sm"
+                                                        className="flex-1 border-purple-600 text-purple-600 hover:bg-purple-600/10 hover:text-purple-600 disabled:opacity-50"
+                                                        disabled={!canExtend || isExtending}
+                                                        onClick={(e) => {e.stopPropagation(); handleExtend(listing);}}
+                                                    >
+                                                        {isExtending ? <Loader2 className="h-4 w-4 animate-spin"/> : <Clock className="h-4 w-4"/>}
+                                                        Extend
+                                                    </Button>
+                                                    <Button onClick={() => handleItemSelect({ id: listing.id, category: listing.category })} variant="secondary" size="sm" className="flex-1">
+                                                        <LogIn className="h-4 w-4"/> View
+                                                    </Button>
+                                                </div>
+                                            </>
                                         </div>
                                     )}
                                     {listing.status === 'completed' && (
