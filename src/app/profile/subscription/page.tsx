@@ -6,13 +6,14 @@ import { ArrowLeft, CheckCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
-import { doc, updateDoc } from 'firebase/firestore';
+import { doc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
 import { useState, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { cn } from '@/lib/utils';
+import { createCheckoutSession, createCustomerPortalSession } from '@/lib/stripe/actions';
 
 export default function SubscriptionPage() {
   const { user, isUserLoading } = useUser();
@@ -20,36 +21,45 @@ export default function SubscriptionPage() {
   const router = useRouter();
   const { toast } = useToast();
 
-  const [isCancelling, setIsCancelling] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [processingPlan, setProcessingPlan] = useState<string | null>(null);
 
   const userProfileRef = useMemoFirebase(() => user ? doc(firestore, 'users', user.uid) : null, [firestore, user]);
   const { data: userProfile, isLoading: isUserProfileLoading } = useDoc(userProfileRef);
+  
+  const handleCheckout = async (plan: 'plus' | 'ultimate', billingCycle: 'monthly' | 'yearly') => {
+      setIsProcessing(true);
+      setProcessingPlan(`${plan}-${billingCycle}`);
+      try {
+          await createCheckoutSession(plan, billingCycle);
+          // The user will be redirected to Stripe by the server action.
+      } catch (error: any) {
+          toast({
+              variant: 'destructive',
+              title: 'Checkout Error',
+              description: error.message || 'Could not initiate the checkout process.',
+          });
+          setIsProcessing(false);
+          setProcessingPlan(null);
+      }
+  }
 
-  const handleCancellation = async () => {
-    if (!user || !firestore || !userProfile?.subscriptionRenewalDate) return;
-    setIsCancelling(true);
-    const userRef = doc(firestore, 'users', user.uid);
-    try {
-        await updateDoc(userRef, {
-            pendingSubscriptionPlan: 'free',
-            pendingSubscriptionBillingCycle: null,
-            pendingSubscriptionEffectiveDate: userProfile.subscriptionRenewalDate,
-        });
-        toast({
-            title: "Subscription Cancellation Scheduled",
-            description: `Your subscription will remain active until ${format(new Date(userProfile.subscriptionRenewalDate), 'PP')}.`,
-            variant: 'success'
-        });
-    } catch (error: any) {
-        toast({
-            title: "Cancellation Failed",
-            description: error.message || "An error occurred while scheduling your subscription cancellation.",
-            variant: "destructive"
-        });
-    } finally {
-        setIsCancelling(false);
-    }
-  };
+  const handleManageBilling = async () => {
+      setIsProcessing(true);
+      setProcessingPlan('manage');
+      try {
+          await createCustomerPortalSession();
+      } catch (error: any) {
+          toast({
+              variant: 'destructive',
+              title: 'Error',
+              description: error.message || 'Could not open the billing portal.',
+          });
+          setIsProcessing(false);
+          setProcessingPlan(null);
+      }
+  }
+
 
   const freeFeatures = [
     "Unlimited Bids",
@@ -82,30 +92,7 @@ export default function SubscriptionPage() {
 
   const billingCycle = userProfile?.subscriptionBillingCycle;
   const renewalDate = userProfile?.subscriptionRenewalDate ? new Date(userProfile.subscriptionRenewalDate) : null;
-
-  const isPlusDisabled = isUltimateUser || (isPlusUser && billingCycle === 'yearly');
-  let plusButtonText = "Upgrade to Plus";
-  if (isUltimateUser) {
-    plusButtonText = "Included in Ultimate";
-  } else if (isPlusUser && billingCycle === 'yearly') {
-    plusButtonText = "Currently Active";
-  } else if (isPlusUser && billingCycle === 'monthly') {
-    plusButtonText = "Manage Plan";
-  }
-  
-  const isUltimateDisabled = isUltimateUser && billingCycle === 'yearly';
-  let ultimateButtonText = "Upgrade to Ultimate";
-  if (isUltimateUser && billingCycle === 'yearly') {
-      ultimateButtonText = "Currently Active";
-  } else if (isUltimateUser && billingCycle === 'monthly') {
-      ultimateButtonText = "Manage Plan";
-  }
-  
-  const pendingPlan = userProfile?.pendingSubscriptionPlan;
-  const pendingCycle = userProfile?.pendingSubscriptionBillingCycle;
-  const pendingDate = userProfile?.pendingSubscriptionEffectiveDate ? new Date(userProfile.pendingSubscriptionEffectiveDate) : null;
-  const isCancellationPending = pendingPlan === 'free';
-
+  const hasStripeSubscription = !!userProfile?.stripeSubscriptionId;
 
   return (
     <div className="container mx-auto max-w-6xl px-4 py-12 md:py-16">
@@ -121,7 +108,7 @@ export default function SubscriptionPage() {
             <p className="text-lg text-muted-foreground mt-2">Choose the plan that's right for you.</p>
         </header>
       
-        {isSubscribed && (
+        {isSubscribed && hasStripeSubscription && (
           <Card className={cn("mb-12", 
             isUltimateUser ? "bg-purple-500/10 border-purple-500/20" : 
             isPlusUser ? "bg-sky-500/10 border-sky-500/20" : 
@@ -129,31 +116,22 @@ export default function SubscriptionPage() {
           )}>
             <CardContent className="p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div className="space-y-2">
-                    <CardTitle className="text-lg mb-2">Current Subscription</CardTitle>
+                    <CardTitle className="text-lg mb-2">Your Current Plan</CardTitle>
                     <div className="flex items-center gap-3">
                         {isUltimateUser ? (
                             <Badge className="bg-purple-500 text-white hover:bg-purple-500 text-base">ULTIMATE</Badge>
                         ) : isPlusUser ? (
                             <Badge className="bg-sky-500 text-white hover:bg-sky-500 text-base">PLUS</Badge>
                         ) : null}
-                        <p className="text-sm text-muted-foreground">
-                        {renewalDate ? `Your plan is active and will automatically renew on ${format(renewalDate, 'PP')}.` : 'Your plan is active.'}
-                        </p>
                     </div>
-                     {pendingPlan && pendingDate && !isCancellationPending && (
-                      <div className="text-sm text-muted-foreground border-t border-muted-foreground/20 pt-2">
-                        <p><strong>Pending Change:</strong> You will be switched to the <strong>{pendingPlan} ({pendingCycle})</strong> plan on {format(pendingDate, 'PP')}.</p>
-                      </div>
-                    )}
-                    {isCancellationPending && pendingDate && (
-                      <div className="text-sm text-muted-foreground border-t border-muted-foreground/20 pt-2">
-                        <p><strong>Cancellation Scheduled:</strong> Your subscription will end on {format(pendingDate, 'PP')}.</p>
-                      </div>
-                    )}
                 </div>
-                <Button variant="outline" onClick={handleCancellation} disabled={isCancelling || isCancellationPending} className="w-full sm:w-auto shrink-0">
-                    {isCancelling && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    {isCancellationPending ? 'Cancellation Scheduled' : 'Cancel Subscription'}
+                <Button 
+                    onClick={handleManageBilling} 
+                    disabled={isProcessing}
+                    className="w-full sm:w-auto shrink-0"
+                >
+                    {isProcessing && processingPlan === 'manage' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                    Manage Billing
                 </Button>
             </CardContent>
           </Card>
@@ -204,15 +182,22 @@ export default function SubscriptionPage() {
               ))}
             </ul>
           </CardContent>
-           <CardFooter>
-                <Button asChild={!isPlusDisabled} className="w-full bg-sky-500 text-white hover:bg-sky-500/90" disabled={isPlusDisabled}>
-                    {isPlusDisabled ? (
-                        <span>{plusButtonText}</span>
-                    ) : (
-                        <Link href="/profile/billing?plan=plus">
-                           {plusButtonText}
-                        </Link>
-                    )}
+           <CardFooter className="flex-col gap-2">
+                <Button 
+                    onClick={() => handleCheckout('plus', 'monthly')} 
+                    disabled={isProcessing} 
+                    className="w-full bg-sky-500 text-white hover:bg-sky-500/90"
+                >
+                    {isProcessing && processingPlan === 'plus-monthly' && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
+                    Choose Monthly
+                </Button>
+                <Button 
+                    onClick={() => handleCheckout('plus', 'yearly')}
+                    disabled={isProcessing}
+                    className="w-full bg-sky-700 text-white hover:bg-sky-700/90"
+                >
+                     {isProcessing && processingPlan === 'plus-yearly' && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
+                    Choose Yearly
                 </Button>
           </CardFooter>
         </Card>
@@ -240,19 +225,23 @@ export default function SubscriptionPage() {
               ))}
             </ul>
           </CardContent>
-          <CardFooter className="flex-col">
-            <Button asChild={!isUltimateDisabled} className="w-full bg-purple-500 text-white hover:bg-purple-500/90" disabled={isUltimateDisabled}>
-                {isUltimateDisabled ? (
-                    <span>{ultimateButtonText}</span>
-                ) : (
-                    <Link href="/profile/billing?plan=ultimate">
-                        {ultimateButtonText}
-                    </Link>
-                )}
-            </Button>
-            {isPlusUser && !isUltimateUser && (
-                <p className="text-xs text-muted-foreground mt-2">You will be refunded for the unused time on your current plan.</p>
-            )}
+          <CardFooter className="flex-col gap-2">
+                <Button 
+                    onClick={() => handleCheckout('ultimate', 'monthly')}
+                    disabled={isProcessing}
+                    className="w-full bg-purple-500 text-white hover:bg-purple-500/90"
+                >
+                    {isProcessing && processingPlan === 'ultimate-monthly' && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
+                    Choose Monthly
+                </Button>
+                <Button 
+                    onClick={() => handleCheckout('ultimate', 'yearly')}
+                    disabled={isProcessing}
+                    className="w-full bg-purple-700 text-white hover:bg-purple-700/90"
+                >
+                     {isProcessing && processingPlan === 'ultimate-yearly' && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
+                    Choose Yearly
+                </Button>
           </CardFooter>
         </Card>
       </div>

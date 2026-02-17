@@ -19,14 +19,14 @@ import { useIsMobile } from '@/hooks/use-mobile';
 
 const accountNavItems = [
     {
-        icon: CreditCard,
-        title: "Payment Options",
-        href: "/profile/settings"
-    },
-    {
         icon: Shield,
         title: "Subscription",
         href: "/profile/subscription"
+    },
+    {
+        icon: CreditCard,
+        title: "Billing",
+        href: "/profile/billing"
     },
     {
         icon: KeyRound,
