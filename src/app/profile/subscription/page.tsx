@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -109,7 +110,7 @@ export default function SubscriptionPage() {
             <p className="text-lg text-muted-foreground mt-2">Choose the plan that's right for you.</p>
         </header>
       
-        {isSubscribed && hasStripeSubscription && (
+        {isSubscribed && (
           <Card className={cn("mb-12", 
             isUltimateUser ? "bg-purple-500/10 border-purple-500/20" : 
             isPlusUser ? "bg-sky-500/10 border-sky-500/20" : 
@@ -128,20 +129,26 @@ export default function SubscriptionPage() {
                             <span className="text-sm text-muted-foreground capitalize">({billingCycle})</span>
                         )}
                     </div>
-                     {renewalDate && (
+                     {renewalDate ? (
                         <p className="text-sm text-muted-foreground">
                             Renews on {format(renewalDate, 'PP')}
                         </p>
+                    ) : (
+                        <p className="text-sm text-muted-foreground">
+                           You have an active subscription.
+                        </p>
                     )}
                 </div>
-                <Button 
-                    onClick={handleManageBilling} 
-                    disabled={isProcessing}
-                    className="w-full sm:w-auto shrink-0"
-                >
-                    {isProcessing && processingPlan === 'manage' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                    Manage Billing
-                </Button>
+                {hasStripeSubscription && (
+                  <Button 
+                      onClick={handleManageBilling} 
+                      disabled={isProcessing}
+                      className="w-full sm:w-auto shrink-0"
+                  >
+                      {isProcessing && processingPlan === 'manage' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                      Manage Billing
+                  </Button>
+                )}
             </CardContent>
           </Card>
         )}
