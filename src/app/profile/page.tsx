@@ -23,6 +23,11 @@ import heic2any from "heic2any";
 
 const accountNavItems = [
     {
+        icon: User,
+        title: "Edit Profile",
+        href: "/profile/account-details"
+    },
+    {
         icon: Shield,
         title: "Subscription",
         href: "/profile/subscription"
@@ -270,13 +275,7 @@ export default function ProfilePage() {
                             </div>
                             <p className="text-sm text-muted-foreground">{user.email}</p>
                         </div>
-                         <div className="mt-6 flex flex-col sm:flex-row gap-2">
-                             <Button asChild variant="outline" className="w-full">
-                                <Link href="/profile/account-details">
-                                    <User className="mr-2 h-4 w-4"/>
-                                    Edit Profile
-                                </Link>
-                            </Button>
+                         <div className="mt-6 flex flex-col gap-2">
                             <Button variant="ghost" className="w-full text-destructive hover:text-destructive hover:bg-destructive/10" onClick={handleLogout}>
                                 <LogOut className="mr-2 h-4 w-4"/>
                                 Logout
