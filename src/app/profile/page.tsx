@@ -251,6 +251,15 @@ export default function ProfilePage() {
                                     {(userProfile?.photoURL || user.photoURL) && <AvatarImage src={userProfile?.photoURL || user.photoURL!} data-ai-hint="person face" />}
                                     <AvatarFallback className="text-3xl">{user.displayName ? getInitials(user.displayName) : 'U'}</AvatarFallback>
                                 </Avatar>
+                                {(userProfile?.isUltimateUser || userProfile?.isPlusUser) && (
+                                    <div className="absolute bottom-0 right-0 translate-y-1 -translate-x-1">
+                                        {userProfile.isUltimateUser ? (
+                                            <Badge className="bg-purple-500 text-white hover:bg-purple-500 border-2 border-background">ULTIMATE</Badge>
+                                        ) : userProfile.isPlusUser ? (
+                                            <Badge className="bg-sky-500 text-white hover:bg-sky-500 border-2 border-background">PLUS</Badge>
+                                        ) : null}
+                                    </div>
+                                )}
                                 <div className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity">
                                     {isUploading ? (
                                         <Loader2 className="w-8 h-8 animate-spin" />
@@ -264,14 +273,7 @@ export default function ProfilePage() {
                             </div>
                         </div>
                         <div className="text-center mt-4">
-                            <div className="flex items-center justify-center gap-2">
-                                <h2 className="text-xl font-semibold">{user.displayName || "User"}</h2>
-                                {userProfile?.isUltimateUser ? (
-                                <Badge className="bg-purple-500 text-white hover:bg-purple-500">ULTIMATE</Badge>
-                                ) : userProfile?.isPlusUser && (
-                                <Badge className="bg-sky-500 text-white hover:bg-sky-500">PLUS</Badge>
-                                )}
-                            </div>
+                            <h2 className="text-xl font-semibold">{user.displayName || "User"}</h2>
                             <p className="text-sm text-muted-foreground">{user.email}</p>
                         </div>
                     </div>
