@@ -241,7 +241,7 @@ export default function SubscriptionPage() {
                     <span className="text-muted-foreground">/month</span>
                 </div>
                 <div className="flex items-baseline gap-2">
-                    <span className="text-2xl font-bold">$49.99</span>
+                    <span className="text-2xl">$49.99</span>
                     <span className="text-muted-foreground">/year</span>
                     <Badge variant="outline" className="border-green-500 text-green-600">Save ~17%</Badge>
                 </div>
@@ -282,7 +282,7 @@ export default function SubscriptionPage() {
                     <span className="text-muted-foreground">/month</span>
                 </div>
                 <div className="flex items-baseline gap-2">
-                    <span className="text-2xl font-bold">$99.99</span>
+                    <span className="text-2xl">$99.99</span>
                     <span className="text-muted-foreground">/year</span>
                     <Badge variant="outline" className="border-green-500 text-green-600">Save ~17%</Badge>
                 </div>
