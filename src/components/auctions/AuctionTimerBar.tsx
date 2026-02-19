@@ -101,7 +101,7 @@ export function AuctionTimerBar({ startDate, endDate, isCard = false }: AuctionT
     if (timeRemainingMs < fifteenMinutesInMs) {
       textColor = "text-destructive"; // Red
     } else if (timeRemainingMs < twoHoursInMs) {
-      textColor = "text-accent"; // Orange
+      textColor = "text-yellow-500"; // Orange
     }
   } else if (isEnded) {
     textColor = "text-destructive";
@@ -139,3 +139,5 @@ export function AuctionTimerBar({ startDate, endDate, isCard = false }: AuctionT
     </div>
   )
 }
+
+    

@@ -362,3 +362,5 @@ export function MyBidItemCard({ item, onStatusUpdate, onItemSelect, className }:
         </Card>
     );
 }
+
+    

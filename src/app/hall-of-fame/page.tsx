@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -36,7 +37,7 @@ type BaseListing = {
 };
 
 type AnyListing = BaseListing & {
-    collection: 'alcohol' | 'art' | 'apparels' | 'casuals' | 'iconics' | 'plates' | 'phoneNumbers';
+    collection: 'alcohol' | 'art' | 'apparels' | 'others' | 'iconics' | 'plates' | 'phoneNumbers';
 }
 
 type BidDoc = {
@@ -92,7 +93,7 @@ const TopListingItem = ({ listing, rank }: { listing: AnyListing, rank: number }
             case 'alcohol': title = listing.name; catDisplay = "Alcohol"; break;
             case 'art': title = listing.itemName; catDisplay = "Art"; break;
             case 'iconics': title = listing.itemName; catDisplay = "Iconic"; break;
-            case 'casuals': title = listing.itemName; catDisplay = "Casual"; break;
+            case 'others': title = listing.itemName; catDisplay = "Other"; break;
             case 'apparels': title = listing.itemName; catDisplay = "Apparel"; break;
             case 'plates': title = listing.itemName; catDisplay = "Car Plate"; break;
             case 'phoneNumbers': title = listing.itemName; catDisplay = "Phone Number"; break;
@@ -197,8 +198,8 @@ export default function HallOfFamePage() {
     const { data: art, isLoading: areArtLoading } = useCollection<BaseListing>(artQuery);
     const apparelsQuery = useMemoFirebase(() => firestore ? query(collection(firestore, 'apparels')) : null, [firestore]);
     const { data: apparels, isLoading: areApparelsLoading } = useCollection<BaseListing>(apparelsQuery);
-    const casualsQuery = useMemoFirebase(() => firestore ? query(collection(firestore, 'casuals')) : null, [firestore]);
-    const { data: casuals, isLoading: areCasualsLoading } = useCollection<BaseListing>(casualsQuery);
+    const othersQuery = useMemoFirebase(() => firestore ? query(collection(firestore, 'others')) : null, [firestore]);
+    const { data: others, isLoading: areOthersLoading } = useCollection<BaseListing>(othersQuery);
     const iconicsQuery = useMemoFirebase(() => firestore ? query(collection(firestore, 'iconics')) : null, [firestore]);
     const { data: iconics, isLoading: areIconicsLoading } = useCollection<BaseListing>(iconicsQuery);
     const platesQuery = useMemoFirebase(() => firestore ? query(collection(firestore, 'plates')) : null, [firestore]);
@@ -210,7 +211,7 @@ export default function HallOfFamePage() {
     const allBidsQuery = useMemoFirebase(() => firestore ? query(collectionGroup(firestore, 'bids')) : null, [firestore]);
     const { data: allBids, isLoading: areBidsLoading } = useCollection<BidDoc>(allBidsQuery);
 
-    const areListingsLoading = areAlcoholLoading || areArtLoading || areApparelsLoading || areCasualsLoading || areIconicsLoading || arePlatesLoading || arePhoneNumbersLoading;
+    const areListingsLoading = areAlcoholLoading || areArtLoading || areApparelsLoading || areOthersLoading || areIconicsLoading || arePlatesLoading || arePhoneNumbersLoading;
     const isStatLoading = areListingsLoading || areBidsLoading;
     
     const [topSellers, setTopSellers] = useState<{uid: string, totalBids: number}[]>([]);
@@ -222,13 +223,13 @@ export default function HallOfFamePage() {
             ...(alcohol?.map(item => ({ ...item, collection: 'alcohol' as const })) || []),
             ...(art?.map(item => ({ ...item, collection: 'art' as const })) || []),
             ...(apparels?.map(item => ({ ...item, collection: 'apparels' as const })) || []),
-            ...(casuals?.map(item => ({ ...item, collection: 'casuals' as const })) || []),
+            ...(others?.map(item => ({ ...item, collection: 'others' as const })) || []),
             ...(iconics?.map(item => ({ ...item, collection: 'iconics' as const })) || []),
             ...(plates?.map(item => ({ ...item, collection: 'plates' as const })) || []),
             ...(phoneNumbers?.map(item => ({ ...item, collection: 'phoneNumbers' as const })) || []),
         ];
         return combined;
-    }, [alcohol, art, apparels, casuals, iconics, plates, phoneNumbers, areListingsLoading]);
+    }, [alcohol, art, apparels, others, iconics, plates, phoneNumbers, areListingsLoading]);
 
      useEffect(() => {
         if (areListingsLoading) return;
@@ -381,3 +382,5 @@ export default function HallOfFamePage() {
         </div>
     );
 }
+
+    

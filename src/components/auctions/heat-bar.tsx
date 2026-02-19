@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -36,7 +37,7 @@ export function HeatBar({ bids, auctionEndDate }: HeatBarProps) {
 
   // Effect to decay heat over time
   useEffect(() => {
-    if (new Date() > auctionEndDate) {
+    if (new Date() > new Date(auctionEndDate)) {
         setHeat(0);
         return;
     }
@@ -81,3 +82,5 @@ export function HeatBar({ bids, auctionEndDate }: HeatBarProps) {
     </div>
   );
 }
+
+    

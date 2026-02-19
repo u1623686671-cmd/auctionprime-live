@@ -41,7 +41,7 @@ type BaseAuctionDoc = {
 };
 
 type AlcoholDoc = BaseAuctionDoc & { name: string; subcategory: string; age: number; };
-type CasualDoc = BaseAuctionDoc & { itemName: string; category: string; };
+type OtherDoc = BaseAuctionDoc & { itemName: string; category: string; };
 type IconicDoc = BaseAuctionDoc & { itemName: string; category: string; };
 type ArtDoc = BaseAuctionDoc & { itemName: string; category: string; };
 type PlateDoc = BaseAuctionDoc & { itemName: string; category: string; };
@@ -65,8 +65,8 @@ export default function TopPicksPage() {
 
   const alcoholQuery = useMemoFirebase(() => firestore ? collection(firestore, 'alcohol') : null, [firestore]);
   const { data: allAlcohol, isLoading: isLoadingAlcohol } = useCollection<AlcoholDoc>(alcoholQuery);
-  const casualsQuery = useMemoFirebase(() => firestore ? collection(firestore, 'casuals') : null, [firestore]);
-  const { data: allCasuals, isLoading: isLoadingCasuals } = useCollection<CasualDoc>(casualsQuery);
+  const othersQuery = useMemoFirebase(() => firestore ? collection(firestore, 'others') : null, [firestore]);
+  const { data: allOthers, isLoading: isLoadingOthers } = useCollection<OtherDoc>(othersQuery);
   const iconicsQuery = useMemoFirebase(() => firestore ? collection(firestore, 'iconics') : null, [firestore]);
   const { data: allIconics, isLoading: isLoadingIconics } = useCollection<IconicDoc>(iconicsQuery);
   const artQuery = useMemoFirebase(() => firestore ? collection(firestore, 'art') : null, [firestore]);
@@ -78,17 +78,17 @@ export default function TopPicksPage() {
   const apparelsQuery = useMemoFirebase(() => firestore ? collection(firestore, 'apparels') : null, [firestore]);
   const { data: allApparels, isLoading: isLoadingApparels } = useCollection<ApparelDoc>(apparelsQuery);
 
-  const areAllListingsLoading = isLoadingAlcohol || isLoadingCasuals || isLoadingIconics || isLoadingArt || isLoadingPlates || isLoadingPhoneNumbers || isLoadingApparels;
+  const areAllListingsLoading = isLoadingAlcohol || isLoadingOthers || isLoadingIconics || isLoadingArt || isLoadingPlates || isLoadingPhoneNumbers || isLoadingApparels;
   
   const auctionCategories = useMemo(() => [
     { data: allAlcohol, type: 'alcohol' },
     { data: allArt, type: 'art' },
     { data: allApparels, type: 'apparels' },
     { data: allIconics, type: 'iconics' },
-    { data: allCasuals, type: 'casuals' },
+    { data: allOthers, type: 'others' },
     { data: allPlates, type: 'plates' },
     { data: allPhoneNumbers, type: 'phoneNumbers' },
-  ], [allAlcohol, allArt, allApparels, allIconics, allCasuals, allPlates, allPhoneNumbers]);
+  ], [allAlcohol, allArt, allApparels, allIconics, allOthers, allPlates, allPhoneNumbers]);
 
   const allItems = useMemo(() => {
     if (areAllListingsLoading) return [];
@@ -109,7 +109,7 @@ export default function TopPicksPage() {
     const category = type;
     switch (category) {
         case 'alcohol': title = item.name; subtitle = item.subcategory; break;
-        case 'casuals': title = item.itemName; subtitle = "Casual"; break;
+        case 'others': title = item.itemName; subtitle = "Other"; break;
         case 'iconics': title = item.itemName; subtitle = `From ${item.category}`; break;
         case 'art': title = item.itemName; subtitle = item.category; break;
         case 'plates': title = item.itemName; subtitle = item.category; break;
@@ -347,6 +347,8 @@ export default function TopPicksPage() {
     </div>
   );
 }
+
+    
 
     
 
