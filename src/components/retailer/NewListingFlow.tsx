@@ -69,7 +69,7 @@ const iconicSchema = z.object({
   ...auctionSettingsSchema,
 }).superRefine(formRefine);
 
-const casualSchema = z.object({
+const otherSchema = z.object({
   itemName: z.string().min(3, { message: "Item name must be at least 3 characters long." }).max(20, { message: "Title cannot be longer than 20 characters." }),
   description: z.string().min(10, { message: "Please provide a more detailed description." }),
   ...imageSchema,
@@ -126,7 +126,7 @@ const IconicFormFields = () => (
         <FormField name="description" render={({ field }) => ( <FormItem> <FormLabel>Description</FormLabel> <FormControl><Textarea placeholder="A detailed description of the item, its history, and its connection to the celebrity." {...field} /></FormControl> <FormMessage /> </FormItem> )} />
     </>
 );
-const CasualFormFields = () => (
+const OtherFormFields = () => (
      <>
         <FormField name="itemName" render={({ field }) => ( <FormItem> <FormLabel>Item Name</FormLabel> <FormControl><Input placeholder="e.g., Vintage Leather Jacket" {...field} /></FormControl> <FormMessage /> </FormItem> )} />
         <FormField name="description" render={({ field }) => ( <FormItem> <FormLabel>Description</FormLabel> <FormControl><Textarea placeholder="A detailed description of the item and its condition." {...field} /></FormControl> <FormMessage /> </FormItem> )} />
@@ -294,7 +294,7 @@ const ApparelFormFields = () => (
 
 const categories = [
     { value: 'iconic', label: 'Iconic Item', icon: Gem, schema: iconicSchema, collection: 'iconics', fields: <IconicFormFields />, success: (v: any) => ({title: "Iconic Item Listed!", description: `${v.itemName} has been successfully listed.`}), defaultValues: { itemName: '', category: '', description: '' } },
-    { value: 'casual', label: 'Casual Item', icon: ShoppingBag, schema: casualSchema, collection: 'casuals', fields: <CasualFormFields />, success: (v: any) => ({title: "Casual Item Listed!", description: `${v.itemName} has been successfully listed.`}), defaultValues: { itemName: '', description: '' } },
+    { value: 'other', label: 'Other', icon: ShoppingBag, schema: otherSchema, collection: 'others', fields: <OtherFormFields />, success: (v: any) => ({title: "Item Listed!", description: `${v.itemName} has been successfully listed.`}), defaultValues: { itemName: '', description: '' } },
     { value: 'alcohol', label: 'Alcohol', icon: Wine, schema: alcoholSchema, collection: 'alcohol', fields: <AlcoholFormFields />, success: (v: any) => ({title: "Alcohol Item Listed!", description: `${v.name} has been successfully listed.`}), defaultValues: { name: '', subcategory: undefined, age: 0, description: '' } },
     { value: 'art', label: 'Art', icon: Palette, schema: artSchema, collection: 'art', fields: <ArtFormFields />, success: (v: any) => ({title: "Art Piece Listed!", description: `${v.itemName} has been successfully listed.`}), defaultValues: { itemName: '', category: '', subcategory: undefined, description: '' } },
     { value: 'apparel', label: 'Apparel', icon: Shirt, schema: apparelSchema, collection: 'apparels', fields: <ApparelFormFields />, success: (v: any) => ({title: "Apparel Listed!", description: `${v.itemName} has been successfully listed.`}), defaultValues: { itemName: '', category: undefined, description: '' } },

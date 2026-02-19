@@ -15,7 +15,7 @@ import { formatDistanceToNow, isPast } from "date-fns";
 
 type BiddingFormProps = {
   itemId: string;
-  category: 'alcohol' | 'iconics' | 'casuals' | 'art' | 'plates' | 'phoneNumbers' | 'apparels';
+  category: 'alcohol' | 'iconics' | 'others' | 'art' | 'plates' | 'phoneNumbers' | 'apparels';
   currentBid: number;
   minimumBidIncrement: number;
   itemUserId: string;
@@ -136,7 +136,7 @@ export function BiddingForm({
         switch (category) {
             case 'alcohol': itemTitle = itemData.name; break;
             case 'art':
-            case 'casuals':
+            case 'others':
             case 'iconics':
             case 'plates':
             case 'phoneNumbers':

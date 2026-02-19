@@ -56,7 +56,7 @@ type BaseListing = {
 };
 
 type AlcoholListingData = { name: string };
-type CasualListingData = { itemName: string };
+type OtherListingData = { itemName: string };
 type IconicListingData = { itemName: string; };
 type ArtListingData = { itemName: string; };
 type PlateListingData = { itemName: string; };
@@ -65,7 +65,7 @@ type ApparelListingData = { itemName: string; };
 
 
 type AlcoholListing = BaseListing & AlcoholListingData & { category: 'alcohol'; };
-type CasualListing = BaseListing & CasualListingData & { category: 'casuals'; };
+type OtherListing = BaseListing & OtherListingData & { category: 'others'; };
 type IconicListing = BaseListing & IconicListingData & { category: 'iconics'; };
 type ArtListing = BaseListing & ArtListingData & { category: 'art'; };
 type PlateListing = BaseListing & PlateListingData & { category: 'plates'; };
@@ -73,7 +73,7 @@ type PhoneNumberListing = BaseListing & PhoneNumberListingData & { category: 'ph
 type ApparelListing = BaseListing & ApparelListingData & { category: 'apparels'; };
 
 
-type AnyListing = AlcoholListing | CasualListing | IconicListing | ArtListing | PlateListing | PhoneNumberListing | ApparelListing;
+type AnyListing = AlcoholListing | OtherListing | IconicListing | ArtListing | PlateListing | PhoneNumberListing | ApparelListing;
 
 
 export default function MyListingsPage() {
@@ -95,8 +95,8 @@ export default function MyListingsPage() {
     const alcoholQuery = useMemoFirebase(() => user ? query(collection(firestore, 'alcohol'), where('userId', '==', user.uid)) : null, [firestore, user]);
     const { data: alcohol, isLoading: areAlcoholLoading } = useCollection<AlcoholListingData & BaseListing>(alcoholQuery);
 
-    const casualsQuery = useMemoFirebase(() => user ? query(collection(firestore, 'casuals'), where('userId', '==', user.uid)) : null, [firestore, user]);
-    const { data: casuals, isLoading: areCasualsLoading } = useCollection<CasualListingData & BaseListing>(casualsQuery);
+    const othersQuery = useMemoFirebase(() => user ? query(collection(firestore, 'others'), where('userId', '==', user.uid)) : null, [firestore, user]);
+    const { data: others, isLoading: areOthersLoading } = useCollection<OtherListingData & BaseListing>(othersQuery);
 
     const iconicsQuery = useMemoFirebase(() => user ? query(collection(firestore, 'iconics'), where('userId', '==', user.uid)) : null, [firestore, user]);
     const { data: iconics, isLoading: areIconicsLoading } = useCollection<IconicListingData & BaseListing>(iconicsQuery);
@@ -114,7 +114,7 @@ export default function MyListingsPage() {
     const { data: apparels, isLoading: areApparelsLoading } = useCollection<ApparelListingData & BaseListing>(apparelsQuery);
 
 
-    const areListingsLoading = areAlcoholLoading || areCasualsLoading || areIconicsLoading || areArtLoading || arePlatesLoading || arePhoneNumbersLoading || areApparelsLoading;
+    const areListingsLoading = areAlcoholLoading || areOthersLoading || areIconicsLoading || areArtLoading || arePlatesLoading || arePhoneNumbersLoading || areApparelsLoading;
     
     // --- State for combined listings ---
     const [liveListings, setLiveListings] = useState<AnyListing[]>([]);
@@ -140,7 +140,7 @@ export default function MyListingsPage() {
 
         const allListings: AnyListing[] = [];
         alcohol?.forEach(item => allListings.push({ ...item, category: 'alcohol' }));
-        casuals?.forEach(item => allListings.push({ ...item, category: 'casuals' }));
+        others?.forEach(item => allListings.push({ ...item, category: 'others' }));
         iconics?.forEach(item => allListings.push({ ...item, category: 'iconics' }));
         art?.forEach(item => allListings.push({ ...item, category: 'art' }));
         plates?.forEach(item => allListings.push({ ...item, category: 'plates' }));
@@ -172,13 +172,13 @@ export default function MyListingsPage() {
         setUpcomingListings(upcoming.sort((a, b) => new Date(a.auctionStartDate).getTime() - new Date(b.auctionStartDate).getTime()));
         setCompletedListings(completed.sort((a, b) => new Date(b.auctionEndDate).getTime() - new Date(a.auctionEndDate).getTime()));
         
-    }, [alcohol, casuals, iconics, art, plates, phoneNumbers, apparels, areListingsLoading]);
+    }, [alcohol, others, iconics, art, plates, phoneNumbers, apparels, areListingsLoading]);
 
 
     const getListingTitle = (listing: AnyListing) => {
         switch (listing.category) {
             case 'alcohol': return listing.name;
-            case 'casuals':
+            case 'others':
             case 'iconics':
             case 'art':
             case 'plates':

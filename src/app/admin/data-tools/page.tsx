@@ -116,7 +116,7 @@ const mockAuctionItems = [
     provider: 'Alfa',
   },
    {
-    category: 'casuals',
+    category: 'others',
     itemName: 'Retro Polaroid Camera',
     description: 'A fully functional vintage Polaroid 600 camera.',
     imageUrls: ['https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?q=80&w=2070&auto=format&fit=crop'],
@@ -131,7 +131,7 @@ const mockAuctionItems = [
 ];
 
 
-const collectionNames = ['alcohol', 'art', 'apparels', 'casuals', 'iconics', 'plates', 'phoneNumbers'];
+const collectionNames = ['alcohol', 'art', 'apparels', 'others', 'iconics', 'plates', 'phoneNumbers'];
 
 function DataToolsPage() {
     const { user } = useUser();
@@ -189,7 +189,7 @@ function DataToolsPage() {
             const batch = writeBatch(firestore);
 
             for (const item of mockAuctionItems) {
-                const collectionName = item.category === 'phoneNumbers' ? 'phoneNumbers' : `${item.category}s`;
+                const collectionName = item.category;
                 const newDocRef = doc(collection(firestore, collectionName));
                 
                 const dataToSeed: any = {
@@ -198,17 +198,17 @@ function DataToolsPage() {
                 };
                 
                 // Adjust field names for specific categories
-                if (item.category === 'iconics' && item.celebrity) {
-                    dataToSeed.category = item.celebrity;
+                if (item.category === 'iconics' && (item as any).celebrity) {
+                    dataToSeed.category = (item as any).celebrity;
                     delete dataToSeed.celebrity;
-                } else if (item.category === 'art' && item.artist) {
-                    dataToSeed.category = item.artist;
+                } else if (item.category === 'art' && (item as any).artist) {
+                    dataToSeed.category = (item as any).artist;
                     delete dataToSeed.artist;
-                } else if (item.category === 'plates' && item.region) {
-                    dataToSeed.category = item.region;
+                } else if (item.category === 'plates' && (item as any).region) {
+                    dataToSeed.category = (item as any).region;
                     delete dataToSeed.region;
-                } else if (item.category === 'phoneNumbers' && item.provider) {
-                    dataToSeed.category = item.provider;
+                } else if (item.category === 'phoneNumbers' && (item as any).provider) {
+                    dataToSeed.category = (item as any).provider;
                     delete dataToSeed.provider;
                 }
 

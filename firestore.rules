@@ -163,8 +163,8 @@ service cloud.firestore {
       }
     }
 
-    // Rules for the 'casuals' collection
-    match /casuals/{casualId} {
+    // Rules for the 'others' collection
+    match /others/{otherId} {
       // Anyone can view the items that are for auction.
       allow get, list: if true;
 

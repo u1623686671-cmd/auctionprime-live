@@ -75,7 +75,7 @@ type AlcoholDoc = BaseAuctionDoc & {
   age: number;
 };
 
-type CasualDoc = BaseAuctionDoc & {
+type OtherDoc = BaseAuctionDoc & {
     itemName: string;
     category: string;
 };
@@ -179,8 +179,8 @@ export default function HomePage() {
   const alcoholQuery = useMemoFirebase(() => firestore ? collection(firestore, 'alcohol') : null, [firestore]);
   const { data: allAlcohol, isLoading: isLoadingAlcohol } = useCollection<AlcoholDoc>(alcoholQuery);
 
-  const casualsQuery = useMemoFirebase(() => firestore ? collection(firestore, 'casuals') : null, [firestore]);
-  const { data: allCasuals, isLoading: isLoadingCasuals } = useCollection<CasualDoc>(casualsQuery);
+  const othersQuery = useMemoFirebase(() => firestore ? collection(firestore, 'others') : null, [firestore]);
+  const { data: allOthers, isLoading: isLoadingOthers } = useCollection<OtherDoc>(othersQuery);
 
   const iconicsQuery = useMemoFirebase(() => firestore ? collection(firestore, 'iconics') : null, [firestore]);
   const { data: allIconics, isLoading: isLoadingIconics } = useCollection<IconicDoc>(iconicsQuery);
@@ -197,17 +197,17 @@ export default function HomePage() {
   const apparelsQuery = useMemoFirebase(() => firestore ? collection(firestore, 'apparels') : null, [firestore]);
   const { data: allApparels, isLoading: isLoadingApparels } = useCollection<ApparelDoc>(apparelsQuery);
 
-  const areAllListingsLoading = isLoadingAlcohol || isLoadingCasuals || isLoadingIconics || isLoadingArt || isLoadingPlates || isLoadingPhoneNumbers || isLoadingApparels;
+  const areAllListingsLoading = isLoadingAlcohol || isLoadingOthers || isLoadingIconics || isLoadingArt || isLoadingPlates || isLoadingPhoneNumbers || isLoadingApparels;
   
   const auctionCategories = useMemo(() => [
     { title: 'Alcohol', icon: Wine, data: allAlcohol, isLoading: isLoadingAlcohol, type: 'alcohol' },
     { title: 'Art', icon: Palette, data: allArt, isLoading: isLoadingArt, type: 'art' },
     { title: 'Apparel', icon: Shirt, data: allApparels, isLoading: isLoadingApparels, type: 'apparels' },
     { title: 'Iconic Items', icon: Gem, data: allIconics, isLoading: isLoadingIconics, type: 'iconics' },
-    { title: 'Casual Items', icon: ShoppingBag, data: allCasuals, isLoading: isLoadingCasuals, type: 'casuals' },
+    { title: 'Other', icon: ShoppingBag, data: allOthers, isLoading: isLoadingOthers, type: 'others' },
     { title: 'Car Plates', icon: CreditCard, data: allPlates, isLoading: isLoadingPlates, type: 'plates' },
     { title: 'Phone Numbers', icon: Phone, data: allPhoneNumbers, isLoading: isLoadingPhoneNumbers, type: 'phoneNumbers' },
-  ], [allAlcohol, isLoadingAlcohol, allArt, isLoadingArt, allApparels, isLoadingApparels, allIconics, isLoadingIconics, allCasuals, isLoadingCasuals, allPlates, isLoadingPlates, allPhoneNumbers, isLoadingPhoneNumbers]);
+  ], [allAlcohol, isLoadingAlcohol, allArt, isLoadingArt, allApparels, isLoadingApparels, allIconics, isLoadingIconics, allOthers, isLoadingOthers, allPlates, isLoadingPlates, allPhoneNumbers, isLoadingPhoneNumbers]);
 
   const allItems = useMemo(() => {
     if (areAllListingsLoading) return [];
@@ -282,9 +282,9 @@ export default function HomePage() {
             title = item.name;
             subtitle = item.subcategory;
             break;
-        case 'casuals':
+        case 'others':
             title = item.itemName;
-            subtitle = "Casual";
+            subtitle = "Other";
             break;
         case 'iconics':
             title = item.itemName;
@@ -967,7 +967,7 @@ export default function HomePage() {
                                 className="rounded-full px-4"
                             >
                                 <cat.icon className="mr-2 h-4 w-4" />
-                                {cat.title === 'Iconic Items' ? 'Iconic' : cat.title === 'Casual Items' ? 'Casual' : cat.title}
+                                {cat.title === 'Iconic Items' ? 'Iconic' : cat.title === 'Other' ? 'Other' : cat.title}
                             </Button>
                         ))}
                     </div>

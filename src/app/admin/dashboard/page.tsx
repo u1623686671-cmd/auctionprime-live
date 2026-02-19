@@ -59,7 +59,7 @@ type BaseListing = {
 };
 
 type AlcoholListingData = { name: string; };
-type CasualListingData = { itemName: string; };
+type OtherListingData = { itemName: string; };
 type IconicListingData = { itemName: string; category: string; };
 type ArtListingData = { itemName: string; category: string; };
 type PlateListingData = { itemName: string; category: string; };
@@ -68,7 +68,7 @@ type ApparelListingData = { itemName: string; category: string; };
 
 type AnyListing = (
     (BaseListing & AlcoholListingData & { category: 'alcohol' }) |
-    (BaseListing & CasualListingData & { category: 'casuals' }) |
+    (BaseListing & OtherListingData & { category: 'others' }) |
     (BaseListing & IconicListingData & { category: 'iconics' }) |
     (BaseListing & ArtListingData & { category: 'art' }) |
     (BaseListing & PlateListingData & { category: 'plates' }) |
@@ -251,7 +251,7 @@ function AdminDashboard({
         
     }, [allListings, areAllListingsLoading]);
     
-    const listingCollections = ['alcohol', 'casuals', 'iconics', 'art', 'plates', 'phoneNumbers', 'apparels'];
+    const listingCollections = ['alcohol', 'others', 'iconics', 'art', 'plates', 'phoneNumbers', 'apparels'];
 
     // --- Handler functions ---
     const handleConfirmDelete = async () => {
@@ -385,7 +385,7 @@ function AdminDashboard({
     const getListingTitle = (listing: AnyListing) => {
         switch (listing.category) {
             case 'alcohol': return listing.name;
-            case 'casuals': return listing.itemName;
+            case 'others': return listing.itemName;
             case 'iconics': return listing.itemName;
             case 'art': return listing.itemName;
             case 'plates': return listing.itemName;
@@ -580,8 +580,8 @@ export default function AdminDashboardPage() {
     // All Listings Queries
     const allAlcoholQuery = useMemoFirebase(() => isVerifiedAdmin ? collection(firestore, 'alcohol') : null, [firestore, isVerifiedAdmin]);
     const { data: allAlcohol, isLoading: areAllAlcoholLoading } = useCollection(allAlcoholQuery);
-    const allCasualsQuery = useMemoFirebase(() => isVerifiedAdmin ? collection(firestore, 'casuals') : null, [firestore, isVerifiedAdmin]);
-    const { data: allCasuals, isLoading: areAllCasualsLoading } = useCollection(allCasualsQuery);
+    const allOthersQuery = useMemoFirebase(() => isVerifiedAdmin ? collection(firestore, 'others') : null, [firestore, isVerifiedAdmin]);
+    const { data: allOthers, isLoading: areAllOthersLoading } = useCollection(allOthersQuery);
     const allIconicsQuery = useMemoFirebase(() => isVerifiedAdmin ? collection(firestore, 'iconics') : null, [firestore, isVerifiedAdmin]);
     const { data: allIconics, isLoading: areAllIconicsLoading } = useCollection(allIconicsQuery);
     const allArtQuery = useMemoFirebase(() => isVerifiedAdmin ? collection(firestore, 'art') : null, [firestore, isVerifiedAdmin]);
@@ -595,7 +595,7 @@ export default function AdminDashboardPage() {
 
 
     const [allListings, setAllListings] = useState<AnyListing[]>([]);
-    const areAllListingsLoading = areAllAlcoholLoading || areAllCasualsLoading || areAllIconicsLoading || areAllArtLoading || areAllPlatesLoading || areAllPhoneNumbersLoading || areAllApparelsLoading;
+    const areAllListingsLoading = areAllAlcoholLoading || areAllOthersLoading || areAllIconicsLoading || areAllArtLoading || areAllPlatesLoading || areAllPhoneNumbersLoading || areAllApparelsLoading;
 
     // Process all listings
     useEffect(() => {
@@ -604,14 +604,14 @@ export default function AdminDashboardPage() {
 
         const combinedListings: AnyListing[] = [];
         allAlcohol?.forEach((item: any) => combinedListings.push({ ...item, category: 'alcohol' }));
-        allCasuals?.forEach((item: any) => combinedListings.push({ ...item, category: 'casuals' }));
+        allOthers?.forEach((item: any) => combinedListings.push({ ...item, category: 'others' }));
         allIconics?.forEach((item: any) => combinedListings.push({ ...item, category: 'iconics' }));
         allArt?.forEach((item: any) => combinedListings.push({ ...item, category: 'art' }));
         allPlates?.forEach((item: any) => combinedListings.push({ ...item, category: 'plates' }));
         allPhoneNumbers?.forEach((item: any) => combinedListings.push({ ...item, category: 'phoneNumbers' }));
         allApparels?.forEach((item: any) => combinedListings.push({ ...item, category: 'apparels' }));
         setAllListings(combinedListings);
-    }, [isVerifiedAdmin, allAlcohol, allCasuals, allIconics, allArt, allPlates, allPhoneNumbers, allApparels, areAllListingsLoading]);
+    }, [isVerifiedAdmin, allAlcohol, allOthers, allIconics, allArt, allPlates, allPhoneNumbers, allApparels, areAllListingsLoading]);
 
 
     // Database Browser Queries
@@ -631,7 +631,7 @@ export default function AdminDashboardPage() {
         { name: 'chats', data: chatsData, isLoading: areChatsLoading },
         { name: 'alcohol', data: allAlcohol, isLoading: areAllAlcoholLoading },
         { name: 'art', data: allArt, isLoading: areAllArtLoading },
-        { name: 'casuals', data: allCasuals, isLoading: areAllCasualsLoading },
+        { name: 'others', data: allOthers, isLoading: areAllOthersLoading },
         { name: 'iconics', data: allIconics, isLoading: areAllIconicsLoading },
         { name: 'plates', data: allPlates, isLoading: areAllPlatesLoading },
         { name: 'phoneNumbers', data: allPhoneNumbers, isLoading: areAllPhoneNumbersLoading },

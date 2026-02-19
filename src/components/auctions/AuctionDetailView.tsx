@@ -179,7 +179,7 @@ export function AuctionDetailView({ itemId, category }: AuctionDetailViewProps) 
         case 'art': return <><p className="text-sm font-medium text-primary flex items-center gap-2"><Palette className="w-4 h-4"/> By {item.category} • {item.subcategory}</p><h1 className="text-3xl md:text-4xl font-bold font-headline">{title}</h1></>;
         case 'iconics': return <><p className="text-sm font-medium text-primary flex items-center gap-2"><Gem className="w-4 h-4"/> From {item.category}</p><h1 className="text-3xl md:text-4xl font-bold font-headline">{title}</h1></>;
         case 'apparels': return <><p className="text-sm font-medium text-primary flex items-center gap-2"><Shirt className="w-4 h-4"/> {item.category}</p><h1 className="text-3xl md:text-4xl font-bold font-headline">{title}</h1></>;
-        case 'casuals': return <><h1 className="text-3xl md:text-4xl font-bold font-headline">{title}</h1></>;
+        case 'others': return <><h1 className="text-3xl md:text-4xl font-bold font-headline">{title}</h1></>;
         case 'plates': return <><p className="text-sm font-medium text-primary flex items-center justify-center gap-2"><CreditCard className="w-4 h-4"/> {item.category}</p><div className="my-4"><LebanesePlateDisplay plateNumber={title} size="medium" /></div></>;
         case 'phoneNumbers': return <><p className="text-sm font-medium text-primary flex items-center justify-center gap-2"><Phone className="w-4 h-4"/> {item.category}</p><div className="my-4"><PhoneNumberDisplay phoneNumber={title} className="max-w-sm mx-auto" /></div></>;
         default: return <h1 className="text-3xl md:text-4xl font-bold font-headline">{title}</h1>;

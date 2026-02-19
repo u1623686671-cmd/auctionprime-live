@@ -109,9 +109,9 @@ export default function AboutPage() {
               </div>
               <div className="p-6 border rounded-lg bg-card shadow-sm">
                 <ShoppingBag className="h-10 w-10 text-primary mb-4" />
-                <h3 className="text-xl font-semibold mb-2 font-headline">Casual Bid</h3>
+                <h3 className="text-xl font-semibold mb-2 font-headline">Other</h3>
                 <p className="text-muted-foreground">
-                  No minimums, no pressure. For everyday items and unique finds where bidding starts freely and grows naturally.
+                  For everything else. A category for items that don't fit into our specialized collections.
                 </p>
               </div>
               <div className="p-6 border rounded-lg bg-card shadow-sm">

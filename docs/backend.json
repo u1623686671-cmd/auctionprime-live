@@ -185,10 +185,10 @@
       "type": "object",
       "description": "An empty object signifying support agent privileges. The document ID is the user's UID."
     },
-    "Casual": {
-      "title": "Casual",
+    "Other": {
+      "title": "Other",
       "type": "object",
-      "description": "Represents a casual item listed for auction.",
+      "description": "Represents an item that doesn't fit into other categories, listed for auction.",
       "properties": {
         "userId": {
           "type": "string",
@@ -719,19 +719,19 @@
       "schema": { "$ref": "#/entities/SupportTicket" },
       "description": "A root collection of all support tickets for agents to view and handle."
     },
-    "/casuals/{casualId}": {
+    "/others/{otherId}": {
       "schema": {
-        "$ref": "#/entities/Casual"
+        "$ref": "#/entities/Other"
       },
-      "description": "Stores all casual item auction listings."
+      "description": "Stores all 'other' item auction listings."
     },
-    "/casuals/{casualId}/bids/{bidId}": {
+    "/others/{otherId}/bids/{bidId}": {
       "schema": { "$ref": "#/entities/Bid" },
-      "description": "Bids for a casual item."
+      "description": "Bids for an 'other' item."
     },
-    "/casuals/{casualId}/watchers/{userId}": {
+    "/others/{otherId}/watchers/{userId}": {
       "schema": { "$ref": "#/entities/Watcher" },
-      "description": "A list of users currently viewing this casual item."
+      "description": "A list of users currently viewing this 'other' item."
     },
     "/iconics/{iconicId}": {
       "schema": { "$ref": "#/entities/Iconic" },

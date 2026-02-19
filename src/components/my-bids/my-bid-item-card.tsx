@@ -146,7 +146,7 @@ const StatusDisplay = ({ status }: { status: BidStatus }) => {
     );
 };
 
-const validCategories = ['alcohol', 'iconics', 'casuals', 'art', 'plates', 'phoneNumbers', 'apparels'];
+const validCategories = ['alcohol', 'iconics', 'others', 'art', 'plates', 'phoneNumbers', 'apparels'];
 
 export function MyBidItemCard({ item, onStatusUpdate, onItemSelect, className }: MyBidItemCardProps) {
     const { user } = useUser();
