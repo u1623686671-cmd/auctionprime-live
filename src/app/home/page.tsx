@@ -32,7 +32,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import { NewListingFlow } from "@/components/retailer/NewListingFlow";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { useIsMobile } from "@/hooks/use-is-mobile";
 import { Skeleton } from "@/components/ui/skeleton";
 import { WatchlistButton } from "@/components/auctions/watchlist-button";
 import { cn } from "@/lib/utils";
@@ -528,7 +528,6 @@ export default function HomePage() {
                             <Plus className="h-4 w-4" />
                             Add item
                         </Button>
-                       <NotificationBell />
                     </div>
                     
                     <div className="hidden md:flex items-center gap-2">
