@@ -101,15 +101,15 @@ export function Header() {
     <>
       <Dialog open={isListingDialogOpen} onOpenChange={setIsListingDialogOpen}>
         <DialogContent className="p-0 flex flex-col h-full sm:h-auto sm:max-h-[90vh] sm:max-w-3xl">
-          <div className="p-6 pb-0 shrink-0">
-            <DialogHeader>
-                <DialogTitle className="text-2xl font-bold">Create a New Listing</DialogTitle>
-                <DialogDescription className="pb-4">Select a category and fill in the details for your auction.</DialogDescription>
-            </DialogHeader>
-          </div>
-          <div className="flex-1 min-h-0 px-6">
-            <ScrollArea className="h-full w-full pr-6 -mr-6">
-              <NewListingFlow onSuccess={() => setIsListingDialogOpen(false)} />
+          <div className="flex-1 min-h-0">
+            <ScrollArea className="h-full w-full">
+               <div className="p-6">
+                <DialogHeader className="pb-4">
+                    <DialogTitle className="text-2xl font-bold">Create a New Listing</DialogTitle>
+                    <DialogDescription>Select a category and fill in the details for your auction.</DialogDescription>
+                </DialogHeader>
+                <NewListingFlow onSuccess={() => setIsListingDialogOpen(false)} />
+              </div>
             </ScrollArea>
           </div>
         </DialogContent>
@@ -167,11 +167,11 @@ export function Header() {
                 <div className="flex items-center gap-2 md:hidden">
                   {!isProfilePage && (
                     <>
-                       <NotificationBell />
                        <Button size="sm" variant="outline" className="text-primary border-primary font-bold hover:text-primary hover:bg-primary/10 gap-1 px-2" onClick={() => setIsListingDialogOpen(true)}>
                             <Plus className="h-4 w-4" />
                             Add item
                         </Button>
+                       <NotificationBell />
                     </>
                   )}
                 </div>
