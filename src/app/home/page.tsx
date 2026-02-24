@@ -31,7 +31,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import { NewListingFlow } from "@/components/retailer/NewListingFlow";
-import { useIsMobile } from "@/hooks/use-is-mobile";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Skeleton } from "@/components/ui/skeleton";
 import { WatchlistButton } from "@/components/auctions/watchlist-button";
 import { cn } from "@/lib/utils";
