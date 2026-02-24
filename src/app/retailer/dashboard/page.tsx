@@ -38,7 +38,8 @@ import { format, addHours, addDays, isPast } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { ChatWithWinnerButton } from "@/components/retailer/chat-with-winner-button";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { useIsMobile } from "@/hooks/use-is-mobile";
+import { createOneTimeCheckoutSession } from "@/lib/stripe/actions";
 
 
 // --- Type Definitions for Listings ---
@@ -285,13 +286,14 @@ export default function MyListingsPage() {
                     title: "Listing Promoted!",
                     description: `"${getListingTitle(listing)}" is now promoted using a free token.`,
                 });
+                setBoostingItemId(null);
             } else {
-                await updateDoc(itemRef, { isPromoted: true });
-                 toast({
-                    variant: 'success',
-                    title: "Listing Promoted!",
-                    description: `"${getListingTitle(listing)}" is now promoted. (Stripe bypassed)`,
+                // User needs to pay, redirect to Stripe
+                await createOneTimeCheckoutSession(user.uid, user.email, 'boost', 1, {
+                    itemId: listing.id,
+                    itemCategory: listing.category,
                 });
+                // User is redirected, component will unmount. No need to reset state.
             }
         } catch (e: any) {
             toast({
@@ -299,7 +301,6 @@ export default function MyListingsPage() {
                 title: "Boost Failed",
                 description: e.message || "Could not promote the listing.",
             });
-        } finally {
             setBoostingItemId(null);
         }
     };
@@ -676,5 +677,3 @@ export default function MyListingsPage() {
         </>
     )
 }
-
-    
