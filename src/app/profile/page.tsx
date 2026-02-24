@@ -13,7 +13,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import Loading from './loading';
-import { useIsMobile } from '@/hooks/use-is-mobile';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { useToast } from '@/hooks/use-toast';
@@ -235,9 +235,9 @@ export default function ProfilePage() {
             <div className="space-y-8">
                 <Card className="overflow-hidden shadow-lg border-0">
                     <div className="h-24 bg-gradient-to-r from-primary to-accent" />
-                    <div className="relative p-6 pt-0">
-                        <div className="flex items-center -mt-12">
-                            <div className="flex-1 flex justify-center items-center">
+                     <div className="relative p-6 pt-0">
+                        <div className="flex items-center -mt-12 justify-center">
+                            <div className="w-1/3 flex justify-center">
                                 {isMobile && (userProfile?.isUltimateUser || userProfile?.isPlusUser) && (
                                     <div>
                                         {userProfile.isUltimateUser ? (
@@ -273,7 +273,7 @@ export default function ProfilePage() {
                                     )}
                                 </div>
                             </div>
-                            <div className="flex-1 flex justify-center items-center">
+                            <div className="w-1/3 flex justify-center">
                                 {isMobile && (
                                     <div>
                                         <NotificationBell />
