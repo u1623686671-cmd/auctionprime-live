@@ -99,21 +99,19 @@ export function Header() {
   return (
     <>
       <Dialog open={isListingDialogOpen} onOpenChange={setIsListingDialogOpen}>
-          <DialogContent className="p-0 flex flex-col h-full sm:h-auto sm:max-h-[90vh] sm:max-w-3xl">
-              <DialogHeader className="p-4 pb-2 sm:p-6 sm:pb-4 shrink-0">
-                  <DialogTitle className="text-2xl font-bold">Create a New Listing</DialogTitle>
-                  <DialogDescription>Select a category and fill in the details for your auction.</DialogDescription>
-              </DialogHeader>
-              <div className="p-4 pt-0 sm:p-6 sm:pt-0 flex-1 min-h-0">
-                  <ScrollArea className="h-full w-full">
-                      <NewListingFlow
-                          onSuccess={() => {
-                              setIsListingDialogOpen(false);
-                          }}
-                      />
-                  </ScrollArea>
-              </div>
-          </DialogContent>
+        <DialogContent className="p-0 flex flex-col h-full sm:h-auto sm:max-h-[90vh] sm:max-w-3xl">
+          <DialogHeader className="p-6 pb-4 shrink-0">
+            <DialogTitle className="text-2xl font-bold">Create a New Listing</DialogTitle>
+            <DialogDescription>
+              Select a category and fill in the details for your auction.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex-1 min-h-0 px-6">
+            <ScrollArea className="h-full w-full pr-6 -mr-6">
+              <NewListingFlow onSuccess={() => setIsListingDialogOpen(false)} />
+            </ScrollArea>
+          </div>
+        </DialogContent>
       </Dialog>
       <header className="sticky top-0 z-50 w-full border-b bg-card">
         <div className="container flex h-16 items-center px-4">
@@ -168,11 +166,11 @@ export function Header() {
                 <div className="flex items-center gap-2 md:hidden">
                   {!isProfilePage && (
                     <>
-                      <NotificationBell />
-                      <Button size="sm" variant="outline" className="text-primary border-primary font-bold hover:text-primary hover:bg-primary/10 gap-1 px-2" onClick={() => setIsListingDialogOpen(true)}>
-                          <Plus className="h-4 w-4" />
-                          Add item
-                      </Button>
+                       <NotificationBell />
+                       <Button size="sm" variant="outline" className="text-primary border-primary font-bold hover:text-primary hover:bg-primary/10 gap-1 px-2" onClick={() => setIsListingDialogOpen(true)}>
+                            <Plus className="h-4 w-4" />
+                            Add item
+                        </Button>
                     </>
                   )}
                 </div>

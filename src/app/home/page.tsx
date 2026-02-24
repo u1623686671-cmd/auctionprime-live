@@ -31,7 +31,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import { NewListingFlow } from "@/components/retailer/NewListingFlow";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { useIsMobile } from "@/hooks/use-is-mobile";
 import { Skeleton } from "@/components/ui/skeleton";
 import { WatchlistButton } from "@/components/auctions/watchlist-button";
 import { cn } from "@/lib/utils";
@@ -323,7 +323,7 @@ export default function HomePage() {
                                 );
                             })}
                         </div>
-                        <div className="mt-4"><h3 className="font-headline text-base font-bold leading-tight truncate group-hover:underline flex items-center gap-1">See More<ChevronRight className="w-5 h-5 text-muted-foreground" /></h3></div>
+                        <div className="mt-4"><h3 className="font-headline text-base font-bold leading-tight truncate group-hover:underline flex items-center gap-1">See More<ChevronRight className="h-5 w-5 text-muted-foreground" /></h3></div>
                     </Link>
                 </div>
             )}
@@ -495,15 +495,15 @@ export default function HomePage() {
       </Dialog>
       <Dialog open={isListingDialogOpen} onOpenChange={setIsListingDialogOpen}>
         <DialogContent className="p-0 flex flex-col h-full sm:h-auto sm:max-h-[90vh] sm:max-w-3xl">
-            <DialogHeader className="p-6 pb-4 shrink-0">
+          <ScrollArea className="h-full w-full">
+            <div className="p-6">
+              <DialogHeader className="pb-6">
                 <DialogTitle className="text-2xl font-bold">Create a New Listing</DialogTitle>
                 <DialogDescription>Select a category and fill in the details for your auction.</DialogDescription>
-            </DialogHeader>
-            <div className="flex-1 min-h-0 px-6">
-                <ScrollArea className="h-full w-full pr-6 -mr-6">
-                    <NewListingFlow onSuccess={() => setIsListingDialogOpen(false)} />
-                </ScrollArea>
+              </DialogHeader>
+              <NewListingFlow onSuccess={() => setIsListingDialogOpen(false)} />
             </div>
+          </ScrollArea>
         </DialogContent>
       </Dialog>
 
@@ -525,7 +525,6 @@ export default function HomePage() {
                             <Plus className="h-4 w-4" />
                             Add item
                         </Button>
-                        <NotificationBell />
                     </div>
                     
                     <div className="hidden md:flex items-center gap-2">
