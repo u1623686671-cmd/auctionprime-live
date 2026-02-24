@@ -126,11 +126,9 @@ async function handleSubscriptionChange(subscription: Stripe.Subscription) {
     
     const priceId = subscription.items.data[0].price.id;
 
-    const priceIdToPlan: Record<string, { plan: 'plus' | 'ultimate', cycle: 'monthly' | 'yearly' }> = {
+    const priceIdToPlan: Record<string, { plan: 'plus' | 'ultimate', cycle: 'monthly' }> = {
         [process.env.STRIPE_PLUS_MONTHLY_ID || '']: { plan: 'plus', cycle: 'monthly' },
-        [process.env.STRIPE_PLUS_YEARLY_ID || '']: { plan: 'plus', cycle: 'yearly' },
         [process.env.STRIPE_ULTIMATE_MONTHLY_ID || '']: { plan: 'ultimate', cycle: 'monthly' },
-        [process.env.STRIPE_ULTIMATE_YEARLY_ID || '']: { plan: 'ultimate', cycle: 'yearly' },
     };
     
     const planInfo = priceIdToPlan[priceId];
@@ -155,11 +153,11 @@ async function handleSubscriptionChange(subscription: Stripe.Subscription) {
     if (!userProfile?.stripeSubscriptionId || subscription.id !== userProfile.stripeSubscriptionId) {
         // This is a new subscription or a plan change, grant tokens
         if(planInfo.plan === 'plus'){
-            updateData.promotionTokens = (userProfile.promotionTokens || 0) + (planInfo.cycle === 'monthly' ? 1 : 12);
+            updateData.promotionTokens = (userProfile.promotionTokens || 0) + 1;
         }
         else if (planInfo.plan === 'ultimate'){
-            updateData.promotionTokens = (userProfile.promotionTokens || 0) + (planInfo.cycle === 'monthly' ? 5 : 60);
-            updateData.extendTokens = (userProfile.extendTokens || 0) + (planInfo.cycle === 'monthly' ? 10 : 120);
+            updateData.promotionTokens = (userProfile.promotionTokens || 0) + 5;
+            updateData.extendTokens = (userProfile.extendTokens || 0) + 10;
         }
     }
     

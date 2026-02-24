@@ -10,13 +10,6 @@ import Stripe from 'stripe';
 type Plan = 'plus' | 'ultimate' | 'free';
 type BillingCycle = 'monthly' | 'yearly';
 
-// ============================================================================
-// IMPORTANT: MANUAL ACTION REQUIRED
-// ============================================================================
-// Create products and prices in your Stripe dashboard and replace these IDs.
-// You need one product for "Ubid Plus" and one for "Ubid Ultimate".
-// Each product needs a "monthly" and a "yearly" price.
-// ============================================================================
 const SUBSCRIPTION_PRICE_IDS: Record<Exclude<Plan, 'free'>, Record<BillingCycle, string>> = {
     plus: {
         monthly: process.env.STRIPE_PLUS_MONTHLY_ID!,
@@ -28,8 +21,8 @@ const SUBSCRIPTION_PRICE_IDS: Record<Exclude<Plan, 'free'>, Record<BillingCycle,
     },
 };
 
-const TOKEN_PRICE_ID = process.env.STRIPE_TOKEN_PRICE_ID!; // A one-time price for 1 token at $2.00
-const BOOST_PRICE_ID = process.env.STRIPE_BOOST_PRICE_ID!; // A one-time price for 1 boost at $1.00
+const TOKEN_PRICE_ID = process.env.STRIPE_TOKEN_PRICE_ID!; 
+const BOOST_PRICE_ID = process.env.STRIPE_BOOST_PRICE_ID!; 
 
 
 async function getOrCreateStripeCustomerId(userId: string, email: string): Promise<string> {
@@ -67,13 +60,13 @@ export async function createCheckoutSession(
     userId: string,
     email: string,
     plan: 'plus' | 'ultimate',
-    billingCycle: 'monthly' | 'yearly'
+    billingCycle: 'monthly'
 ): Promise<void> {
 
     const priceId = SUBSCRIPTION_PRICE_IDS[plan][billingCycle];
 
     if (!priceId || !priceId.startsWith('price_')) {
-        throw new Error('Stripe subscription price IDs are not configured correctly in your environment variables.');
+        throw new Error('Stripe monthly subscription price IDs are not configured correctly in your environment variables.');
     }
 
     const customerId = await getOrCreateStripeCustomerId(userId, email);

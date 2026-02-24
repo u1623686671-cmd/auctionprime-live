@@ -6,8 +6,6 @@ import { useState, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Label } from '@/components/ui/label';
 import { Loader2, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
@@ -106,7 +104,7 @@ export default function BillingPage() {
                 <CardContent className="space-y-6">
                     <div className="p-4 rounded-lg bg-secondary space-y-3">
                          <div className="flex justify-between items-center text-sm">
-                            <p className="text-muted-foreground">{planDetails.name} ({billingCycle})</p>
+                            <p className="text-muted-foreground">{planDetails.name} (Monthly)</p>
                             <p className="font-semibold">${price.toFixed(2)}</p>
                         </div>
                         <Separator />
