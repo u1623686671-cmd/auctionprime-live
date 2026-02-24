@@ -1,4 +1,3 @@
-
 'use client';
 
 import { Bell, Loader2 } from 'lucide-react';
@@ -16,10 +15,11 @@ import { formatDistanceToNow } from 'date-fns';
 import { ScrollArea } from '../ui/scroll-area';
 import { useEffect, useState } from 'react';
 import { Skeleton } from '../ui/skeleton';
-import { usePathname } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../ui/dialog';
 import { Card } from '../ui/card';
+import { AuctionDetailView } from '../auctions/AuctionDetailView';
 
 type Notification = {
     id: string;
@@ -54,10 +54,11 @@ const TimeAgo = ({ timestamp }: { timestamp: any }) => {
 export function NotificationBell() {
     const { user } = useUser();
     const firestore = useFirestore();
+    const router = useRouter();
     const unreadCount = useUnreadNotificationsCount();
-    const pathname = usePathname();
     const [popoverOpen, setPopoverOpen] = useState(false);
     const [isFullListOpen, setIsFullListOpen] = useState(false);
+    const [selectedItem, setSelectedItem] = useState<{itemId: string, category: string} | null>(null);
 
     const notificationsQuery = useMemoFirebase(() => {
         if (!user) return null;
@@ -72,7 +73,7 @@ export function NotificationBell() {
     const handleMarkOneAsRead = async (notificationId: string) => {
         if (!user || !firestore) return;
         const notifRef = doc(firestore, 'users', user.uid, 'notifications', notificationId);
-        await writeBatch(firestore).update(notifRef, { isRead: true }).commit();
+        await writeBatch(firestore).update(notifRef, { isRead: true }).commit().catch(()=>{});
     };
 
     const handlePopoverOpenChange = async (open: boolean) => {
@@ -95,6 +96,28 @@ export function NotificationBell() {
         setIsFullListOpen(true);
     };
 
+    const handleNotificationClick = (e: React.MouseEvent, notification: Notification) => {
+        e.preventDefault();
+        setPopoverOpen(false);
+        setIsFullListOpen(false);
+        
+        handleMarkOneAsRead(notification.id);
+
+        const link = notification.link;
+        if (link.startsWith('/messages')) {
+            router.push(link);
+            return;
+        }
+
+        const pathSegments = link.split('/').filter(Boolean);
+        if (pathSegments.length === 2) {
+            const [category, itemId] = pathSegments;
+            setSelectedItem({ category, itemId });
+        } else {
+            router.push(link);
+        }
+    };
+
     return (
         <>
         <Popover open={popoverOpen} onOpenChange={handlePopoverOpenChange}>
@@ -103,9 +126,9 @@ export function NotificationBell() {
                   variant="outline"
                   size="icon"
                   className={cn(
-                    "relative h-8 w-8 rounded-md p-0", // Mobile-first: same height and rounding as 'sm' button, but square.
-                    "text-primary border-primary font-bold hover:text-primary hover:bg-primary/10", // Mobile-first: color styles to match 'Add item'.
-                    "md:rounded-full md:h-10 md:w-10 md:bg-card md:hover:bg-muted md:border-border md:text-foreground md:font-normal" // Desktop overrides.
+                    "relative h-8 w-8 rounded-md p-0",
+                    "text-primary border-primary font-bold hover:text-primary hover:bg-primary/10",
+                    "md:rounded-full md:h-10 md:w-10 md:bg-card md:hover:bg-muted md:border-border md:text-foreground md:font-normal"
                   )}
                 >
                     <Bell className="h-5 w-5" />
@@ -139,7 +162,7 @@ export function NotificationBell() {
                         <ScrollArea className="h-80">
                              <div className="space-y-2 p-2">
                             {notifications.map((notification) => (
-                                <Link href={notification.link} key={notification.id} className="block rounded-lg hover:bg-muted/50 transition-colors">
+                                <div onClick={(e) => handleNotificationClick(e, notification)} key={notification.id} className="block rounded-lg hover:bg-muted/50 transition-colors cursor-pointer">
                                     <div className="p-2">
                                         <div className="flex items-start gap-3">
                                             {!notification.isRead && <span className="flex h-2 w-2 translate-y-1 rounded-full bg-primary" />}
@@ -156,7 +179,7 @@ export function NotificationBell() {
                                             </div>
                                         </div>
                                     </div>
-                                </Link>
+                                </div>
                             ))}
                             </div>
                         </ScrollArea>
@@ -185,7 +208,7 @@ export function NotificationBell() {
                         <ScrollArea className="h-full">
                             <div className="space-y-2 p-4 sm:p-6">
                                 {notifications.map((notification) => (
-                                    <Link href={notification.link} key={notification.id} onClick={() => { handleMarkOneAsRead(notification.id); setIsFullListOpen(false); }} className="block">
+                                    <div onClick={(e) => { handleNotificationClick(e, notification); }} key={notification.id} className="cursor-pointer">
                                         <Card className={cn(
                                             "p-4 transition-all hover:shadow-md border-0 shadow-sm",
                                             !notification.isRead && "bg-secondary"
@@ -205,12 +228,30 @@ export function NotificationBell() {
                                             </div>
                                             </div>
                                         </Card>
-                                    </Link>
+                                    </div>
                                 ))}
                             </div>
                         </ScrollArea>
                     )}
                 </div>
+            </DialogContent>
+        </Dialog>
+
+        <Dialog open={!!selectedItem} onOpenChange={(isOpen) => !isOpen && setSelectedItem(null)}>
+            <DialogContent className="p-0">
+                <DialogHeader className="sr-only">
+                    <DialogTitle>Auction Details</DialogTitle>
+                    <DialogDescription>
+                        Viewing the details for the selected auction item.
+                    </DialogDescription>
+                </DialogHeader>
+                <ScrollArea className="h-[90vh]">
+                    <div className="p-4 pt-8 sm:p-6 sm:pt-6">
+                        {selectedItem && (
+                            <AuctionDetailView itemId={selectedItem.itemId} category={selectedItem.category} />
+                        )}
+                    </div>
+                </ScrollArea>
             </DialogContent>
         </Dialog>
       </>
