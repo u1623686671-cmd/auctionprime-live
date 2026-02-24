@@ -8,15 +8,19 @@ runConfig:
 
 env:
   - variable: STRIPE_API_KEY
-    secret: STRIPE_API_KEY # The value for this secret will be set via the CLI
+    secret: STRIPE_API_KEY
   - variable: STRIPE_WEBHOOK_SECRET
-    secret: STRIPE_WEBHOOK_SECRET # The value for this secret will be set via the CLI
+    secret: STRIPE_WEBHOOK_SECRET
   - variable: NEXT_PUBLIC_URL
     value: "https://auctionprime.one"
   - variable: STRIPE_PLUS_MONTHLY_ID
     value: "price_1T4OHgK0UI9TeZnH1NEUNaNF"
+  - variable: STRIPE_PLUS_YEARLY_ID
+    value: "REPLACE_WITH_YOUR_STRIPE_PLUS_YEARLY_ID"
   - variable: STRIPE_ULTIMATE_MONTHLY_ID
     value: "price_1T4OIAK0UI9TeZnH8FzhMmcM"
+  - variable: STRIPE_ULTIMATE_YEARLY_ID
+    value: "REPLACE_WITH_YOUR_STRIPE_ULTIMATE_YEARLY_ID"
   - variable: STRIPE_TOKEN_PRICE_ID
     value: "price_1T4OIbK0UI9TeZnHOJNK9x9j"
   - variable: STRIPE_BOOST_PRICE_ID
