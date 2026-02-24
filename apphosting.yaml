@@ -8,9 +8,9 @@ runConfig:
 
 env:
   - variable: STRIPE_API_KEY
-    secret: YOUR_NEW_LIVE_STRIPE_SECRET_KEY # Replace with your new sk_live_... key from Stripe
+    secret: STRIPE_API_KEY # The value for this secret will be set via the CLI
   - variable: STRIPE_WEBHOOK_SECRET
-    secret: YOUR_LIVE_STRIPE_WEBHOOK_SECRET # Replace with your new whsec_... from your live webhook
+    secret: STRIPE_WEBHOOK_SECRET # The value for this secret will be set via the CLI
   - variable: NEXT_PUBLIC_URL
     value: "https://auctionprime.one"
   - variable: STRIPE_PLUS_MONTHLY_ID
