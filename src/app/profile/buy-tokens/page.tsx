@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useUser, useFirestore } from "@/firebase";
+import { useUser } from "@/firebase";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Loader2, ArrowLeft, Coins, Minus, Plus, HelpCircle, ChevronsRight } from "lucide-react";
@@ -17,11 +17,10 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import { Separator } from "@/components/ui/separator";
-import { doc, updateDoc, increment } from "firebase/firestore";
+import { createOneTimeCheckoutSession } from "@/lib/stripe/actions";
 
 export default function BuyTokensPage() {
     const { user, isUserLoading } = useUser();
-    const firestore = useFirestore();
     const router = useRouter();
     const { toast } = useToast();
     const [isAllowed, setIsAllowed] = useState(false);
@@ -41,24 +40,17 @@ export default function BuyTokensPage() {
     }, [isUserLoading, user, router]);
 
     const handlePurchase = async () => {
-        if (!user) return;
+        if (!user || !user.email) return;
         setIsSubmitting(true);
         try {
-            const userRef = doc(firestore, 'users', user.uid);
-            await updateDoc(userRef, {
-                extendTokens: increment(quantity)
-            });
-            toast({
-                variant: 'success',
-                title: 'Purchase Successful!',
-                description: `You have received ${quantity} extend token(s).`,
-            });
-            router.push('/retailer/dashboard');
+            await createOneTimeCheckoutSession(user.uid, user.email, 'token', quantity);
+            // The user will be redirected to Stripe by the server action.
+            // If it fails, the catch block will handle it.
         } catch (error: any) {
             toast({
                 variant: 'destructive',
                 title: 'Purchase Failed',
-                description: error.message || 'Could not complete the purchase.',
+                description: error.message || 'Could not redirect you to checkout. Please try again.',
             });
             setIsSubmitting(false);
         }
