@@ -2,9 +2,7 @@
 
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useState, useEffect, useMemo } from 'react';
-import { doc, updateDoc, increment } from 'firebase/firestore';
-import { add, format } from 'date-fns';
+import { useState, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,17 +12,19 @@ import { Loader2, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
+import { createCheckoutSession } from '@/lib/stripe/actions';
+import { doc } from 'firebase/firestore';
 
 const plans = {
     plus: {
-        name: 'Ubid Plus',
+        name: 'AuctionPrime Plus',
         monthlyPrice: 4.99,
         yearlyPrice: 49.99,
         monthlyTokens: 1,
         yearlyTokens: 12,
     },
     ultimate: {
-        name: 'Ubid Ultimate',
+        name: 'AuctionPrime Ultimate',
         monthlyPrice: 9.99,
         yearlyPrice: 99.99,
         monthlyPromoTokens: 5,
@@ -50,38 +50,6 @@ export default function BillingPage() {
     const userProfileRef = useMemoFirebase(() => user ? doc(firestore, 'users', user.uid) : null, [firestore, user]);
     const { data: userProfile, isLoading: isUserProfileLoading } = useDoc(userProfileRef);
 
-    const [creditAmount, setCreditAmount] = useState(0);
-    const [isUpgrade, setIsUpgrade] = useState(false);
-
-    useEffect(() => {
-        if (!userProfile || !planId) return;
-
-        const upgradeCheck = userProfile.isPlusUser && planId === 'ultimate';
-        setIsUpgrade(upgradeCheck);
-
-        if (upgradeCheck && userProfile.subscriptionRenewalDate && userProfile.subscriptionBillingCycle) {
-            const plusRenewalDate = userProfile.subscriptionRenewalDate.toDate();
-            const now = new Date();
-            
-            const wasYearly = userProfile.subscriptionBillingCycle === 'yearly';
-            const pricePaid = wasYearly ? plans.plus.yearlyPrice : plans.plus.monthlyPrice;
-            const startDate = wasYearly ? add(plusRenewalDate, { years: -1 }) : add(plusRenewalDate, { months: -1 });
-
-            const totalDuration = plusRenewalDate.getTime() - startDate.getTime();
-            const timeUsed = now.getTime() - startDate.getTime();
-            
-            let credit = 0;
-            if (timeUsed < totalDuration) {
-                const remainingRatio = 1 - (timeUsed / totalDuration);
-                credit = pricePaid * remainingRatio;
-            }
-            setCreditAmount(credit > 0 ? credit : 0);
-        } else {
-            setCreditAmount(0);
-        }
-    }, [userProfile, planId]);
-
-
     useEffect(() => {
         if (!isUserLoading && !user) {
             router.replace('/login');
@@ -92,52 +60,20 @@ export default function BillingPage() {
     }, [isUserLoading, user, planId, router]);
 
     const handleConfirm = async () => {
-        if (!user || !user.email || !userProfileRef || !userProfile || !planId || !planDetails) return;
+        if (!user || !user.email || !planId) return;
 
         setIsProcessing(true);
 
         try {
-            let proRataMessage = '';
-            if (isUpgrade && creditAmount > 0) {
-                proRataMessage = ` A credit of $${creditAmount.toFixed(2)} for the remainder of your Plus plan has been applied.`;
-            }
-
-            const renewalDate = billingCycle === 'monthly'
-                ? add(new Date(), { months: 1 })
-                : add(new Date(), { years: 1 });
-
-            const updateData: any = {
-                isPlusUser: planId === 'plus',
-                isUltimateUser: planId === 'ultimate',
-                subscriptionBillingCycle: billingCycle,
-                stripeSubscriptionId: `sub_bypassed_${Date.now()}`,
-                subscriptionRenewalDate: renewalDate,
-            };
-
-            if (planId === 'plus') {
-                updateData.promotionTokens = (userProfile.promotionTokens || 0) + (billingCycle === 'monthly' ? planDetails.monthlyTokens : planDetails.yearlyTokens);
-            } else if (planId === 'ultimate') {
-                updateData.promotionTokens = (userProfile.promotionTokens || 0) + (billingCycle === 'monthly' ? planDetails.monthlyPromoTokens : planDetails.yearlyPromoTokens);
-                updateData.extendTokens = (userProfile.extendTokens || 0) + (billingCycle === 'monthly' ? planDetails.monthlyExtendTokens : planDetails.yearlyExtendTokens);
-            }
-
-            await updateDoc(userProfileRef, updateData);
-
-            toast({
-                variant: 'success',
-                title: 'Subscription Activated!',
-                description: `You have successfully subscribed to the ${planDetails.name} plan.${proRataMessage}`,
-            });
-            
-            router.push('/profile/subscription');
-
+            await createCheckoutSession(user.uid, user.email, planId, billingCycle);
+            // The user will be redirected to Stripe by the server action.
+            // If it fails, the catch block will handle it.
         } catch (error: any) {
             toast({
                 variant: 'destructive',
-                title: 'Activation Error',
-                description: error.message || 'Could not activate the subscription.',
+                title: 'Checkout Error',
+                description: error.message || 'Could not redirect you to checkout. Please try again.',
             });
-        } finally {
             setIsProcessing(false);
         }
     }
@@ -151,8 +87,6 @@ export default function BillingPage() {
     }
     
     const price = billingCycle === 'monthly' ? planDetails.monthlyPrice : planDetails.yearlyPrice;
-    const finalPrice = Math.max(0, price - creditAmount);
-
 
     return (
         <div className="container mx-auto max-w-2xl px-4 py-12 md:py-16">
@@ -196,16 +130,10 @@ export default function BillingPage() {
                             <p className="text-muted-foreground">{planDetails.name} ({billingCycle})</p>
                             <p className="font-semibold">${price.toFixed(2)}</p>
                         </div>
-                        {isUpgrade && creditAmount > 0 && (
-                            <div className="flex justify-between items-center text-sm text-green-600">
-                                <p>Credit from Plus plan</p>
-                                <p className="font-semibold">-${creditAmount.toFixed(2)}</p>
-                            </div>
-                        )}
                         <Separator />
                         <div className="flex justify-between items-center text-lg">
                             <p className="font-bold">Total Due Today</p>
-                            <p className="font-bold">${finalPrice.toFixed(2)}</p>
+                            <p className="font-bold">${price.toFixed(2)}</p>
                         </div>
                     </div>
 
@@ -213,7 +141,7 @@ export default function BillingPage() {
                 <CardFooter>
                     <Button onClick={handleConfirm} disabled={isProcessing} className="w-full">
                         {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : null}
-                        Confirm Subscription
+                        {isProcessing ? 'Redirecting to Checkout...' : 'Proceed to Payment'}
                     </Button>
                 </CardFooter>
             </Card>
