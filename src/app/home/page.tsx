@@ -251,7 +251,7 @@ export default function HomePage() {
   }, [allItems, areAllListingsLoading, user]);
 
   const filteredCategoryItems = useMemo(() => {
-    let items = allItems;
+    let items = allItems.filter(item => !isPast(new Date(item.auctionEndDate)));
     if (categoryFilter !== 'all') {
         items = items.filter(item => item.category === categoryFilter);
     }
@@ -323,7 +323,7 @@ export default function HomePage() {
                                 );
                             })}
                         </div>
-                        <div className="mt-4"><h3 className="font-headline text-base font-bold leading-tight truncate group-hover:underline flex items-center gap-1">See More<ChevronRight className="h-5 w-5 text-muted-foreground" /></h3></div>
+                        <div className="mt-4"><h3 className="font-headline text-base font-bold leading-tight truncate group-hover:underline flex items-center gap-1">See More<ChevronRight className="w-5 h-5 text-muted-foreground" /></h3></div>
                     </Link>
                 </div>
             )}
@@ -525,6 +525,7 @@ export default function HomePage() {
                             <Plus className="h-4 w-4" />
                             Add item
                         </Button>
+                        <NotificationBell />
                     </div>
                     
                     <div className="hidden md:flex items-center gap-2">
