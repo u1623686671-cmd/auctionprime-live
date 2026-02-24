@@ -168,11 +168,11 @@ export function Header() {
                 <div className="flex items-center gap-2 md:hidden">
                   {!isProfilePage && (
                     <>
-                      <NotificationBell />
                       <Button size="sm" variant="outline" className="text-primary border-primary font-bold hover:text-primary hover:bg-primary/10 gap-1 px-2" onClick={() => setIsListingDialogOpen(true)}>
                           <Plus className="h-4 w-4" />
                           Add item
                       </Button>
+                      <NotificationBell />
                     </>
                   )}
                 </div>
