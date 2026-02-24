@@ -42,7 +42,7 @@ export default function BillingPage() {
     const { toast } = useToast();
     
     const [isProcessing, setIsProcessing] = useState(false);
-    const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
+    const billingCycle = 'monthly';
 
     const planId = searchParams.get('plan') as 'plus' | 'ultimate' | null;
     const planDetails = planId ? plans[planId] : null;
@@ -86,7 +86,7 @@ export default function BillingPage() {
         );
     }
     
-    const price = billingCycle === 'monthly' ? planDetails.monthlyPrice : planDetails.yearlyPrice;
+    const price = planDetails.monthlyPrice;
 
     return (
         <div className="container mx-auto max-w-2xl px-4 py-12 md:py-16">
@@ -104,27 +104,6 @@ export default function BillingPage() {
                     <CardDescription>You are subscribing to the <span className={cn("font-semibold", planId === 'plus' ? 'text-sky-500' : 'text-purple-500')}>{planDetails.name}</span> plan.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                    <div>
-                        <Label>Billing Cycle</Label>
-                        <RadioGroup
-                            value={billingCycle}
-                            onValueChange={(value: 'monthly' | 'yearly') => setBillingCycle(value)}
-                            className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-4"
-                        >
-                            <Label htmlFor="monthly" className="border rounded-md p-4 flex flex-col items-start cursor-pointer data-[state=checked]:border-primary">
-                                <RadioGroupItem value="monthly" id="monthly" className="mb-2"/>
-                                <span className="font-bold">Billed Monthly</span>
-                                <span className="text-muted-foreground">${planDetails.monthlyPrice.toFixed(2)} / month</span>
-                            </Label>
-                             <Label htmlFor="yearly" className="border rounded-md p-4 flex flex-col items-start cursor-pointer data-[state=checked]:border-primary">
-                                <RadioGroupItem value="yearly" id="yearly" className="mb-2" />
-                                <span className="font-bold">Billed Yearly</span>
-                                <span className="text-muted-foreground">${planDetails.yearlyPrice.toFixed(2)} / year</span>
-                                <span className="mt-1 text-xs font-semibold text-green-600">Save ~17%</span>
-                            </Label>
-                        </RadioGroup>
-                    </div>
-
                     <div className="p-4 rounded-lg bg-secondary space-y-3">
                          <div className="flex justify-between items-center text-sm">
                             <p className="text-muted-foreground">{planDetails.name} ({billingCycle})</p>

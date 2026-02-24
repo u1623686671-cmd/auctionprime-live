@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from 'next/link';
@@ -202,11 +201,6 @@ export default function SubscriptionPage() {
                     <span className="text-4xl font-bold font-headline">$4.99</span>
                     <span className="text-muted-foreground">/month</span>
                 </div>
-                <div className="flex items-baseline gap-2">
-                    <span className="text-2xl">$49.99</span>
-                    <span className="text-muted-foreground">/year</span>
-                    <Badge variant="outline" className="border-green-500 text-green-600">Save ~17%</Badge>
-                </div>
             </div>
             <ul className="space-y-2 text-foreground">
               {plusFeatures.map((feature, index) => (
@@ -242,11 +236,6 @@ export default function SubscriptionPage() {
                     <span className="text-4xl font-bold font-headline">$9.99</span>
                     <span className="text-muted-foreground">/month</span>
                 </div>
-                <div className="flex items-baseline gap-2">
-                    <span className="text-2xl">$99.99</span>
-                    <span className="text-muted-foreground">/year</span>
-                    <Badge variant="outline" className="border-green-500 text-green-600">Save ~17%</Badge>
-                </div>
             </div>
              <ul className="space-y-2 text-foreground">
               {ultimateFeatures.map((feature, index) => (
@@ -271,5 +260,3 @@ export default function SubscriptionPage() {
     </div>
   );
 }
-
-    
