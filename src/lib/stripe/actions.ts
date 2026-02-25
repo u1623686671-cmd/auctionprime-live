@@ -1,4 +1,3 @@
-
 'use server';
 
 import { stripe } from '@/lib/stripe';
@@ -156,4 +155,3 @@ export async function createCustomerPortalSession(userId: string, email: string)
         throw new Error("Could not create Stripe customer portal session.");
     }
 }
-
