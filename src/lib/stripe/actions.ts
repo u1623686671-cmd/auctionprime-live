@@ -1,4 +1,3 @@
-
 'use server';
 
 import { stripe } from '@/lib/stripe';
@@ -9,7 +8,7 @@ import Stripe from 'stripe';
 
 type Plan = 'plus' | 'ultimate';
 
-// This function is now transactional to prevent race conditions.
+// This function is transactional to prevent race conditions and ensure data integrity.
 async function getOrCreateStripeCustomerId(userId: string, email: string): Promise<string> {
     const userRef = db.collection('users').doc(userId);
 
@@ -18,19 +17,19 @@ async function getOrCreateStripeCustomerId(userId: string, email: string): Promi
             const userSnap = await transaction.get(userRef);
 
             if (!userSnap.exists) {
-                throw new Error("User profile not found.");
+                throw new Error("User profile not found in database.");
             }
 
             const userData = userSnap.data()!;
             // Check for a valid, existing Stripe Customer ID
-            if (userData.stripeCustomerId && userData.stripeCustomerId.startsWith('cus_')) {
+            if (userData.stripeCustomerId && typeof userData.stripeCustomerId === 'string' && userData.stripeCustomerId.startsWith('cus_')) {
                 return userData.stripeCustomerId;
             }
 
             // User exists but has no Stripe customer ID, create one.
             const customer = await stripe.customers.create({
                 email: email,
-                name: userData.displayName,
+                name: userData.displayName || 'AuctionPrime User',
                 metadata: {
                     firebaseUID: userId,
                 },
@@ -42,59 +41,67 @@ async function getOrCreateStripeCustomerId(userId: string, email: string): Promi
             return customer.id;
         });
         return customerId;
-    } catch (error) {
-        console.error("Error in getOrCreateStripeCustomerId transaction:", error);
-        // Re-throw the error to be handled by the calling function.
-        // This will ensure the user sees a descriptive error toast.
-        throw new Error('Could not create or retrieve customer details. Please try again.');
+    } catch (error: any) {
+        console.error("Critical Error in getOrCreateStripeCustomerId:", error);
+        throw new Error(`Billing connection failed: ${error.message || 'Please try again.'}`);
     }
 }
 
 
-// This function has improved error handling to be more specific.
 export async function createCheckoutSession(
     userId: string,
     email: string,
     plan: 'plus' | 'ultimate'
 ): Promise<void> {
 
-    const origin = headers().get('origin') || process.env.NEXT_PUBLIC_URL!;
+    const origin = headers().get('origin') || process.env.NEXT_PUBLIC_URL;
     
+    if (!origin) {
+        throw new Error("Application origin not found. Please contact support.");
+    }
+
     const priceIdEnvVarName = plan === 'plus' ? 'STRIPE_PLUS_MONTHLY_ID' : 'STRIPE_ULTIMATE_MONTHLY_ID';
     const priceId = process.env[priceIdEnvVarName];
 
     if (!priceId || !priceId.startsWith('price_')) {
-        const errorMessage = `Server configuration error: The environment variable ${priceIdEnvVarName} is missing or invalid. Please check your apphosting.yaml file and ensure you have replaced the placeholder value.`;
+        const errorMessage = `Configuration Error: The Price ID for the ${plan} plan is missing or invalid in the server environment.`;
         console.error(errorMessage);
         throw new Error(errorMessage);
     }
 
     const customerId = await getOrCreateStripeCustomerId(userId, email);
 
-    const checkoutSession = await stripe.checkout.sessions.create({
-        payment_method_types: ['card'],
-        mode: 'subscription',
-        customer: customerId,
-        line_items: [{
-            price: priceId,
-            quantity: 1,
-        }],
-        success_url: `${origin}/profile/subscription?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${origin}/profile/subscription`,
-        metadata: {
-            firebaseUID: userId,
-            plan: plan,
-        }
-    });
+    let sessionUrl: string | null = null;
 
-    if (checkoutSession.url) {
-        redirect(checkoutSession.url);
+    try {
+        const checkoutSession = await stripe.checkout.sessions.create({
+            payment_method_types: ['card'],
+            mode: 'subscription',
+            customer: customerId,
+            line_items: [{
+                price: priceId,
+                quantity: 1,
+            }],
+            success_url: `${origin}/profile/subscription?session_id={CHECKOUT_SESSION_ID}`,
+            cancel_url: `${origin}/profile/subscription`,
+            metadata: {
+                firebaseUID: userId,
+                plan: plan,
+            }
+        });
+        sessionUrl = checkoutSession.url;
+    } catch (error: any) {
+        console.error("Stripe Checkout Session Error:", error);
+        throw new Error(`Failed to initiate checkout: ${error.message}`);
+    }
+
+    if (sessionUrl) {
+        redirect(sessionUrl);
     } else {
-        throw new Error("Could not create Stripe checkout session.");
+        throw new Error("Stripe did not return a valid checkout URL.");
     }
 }
 
-// This function also has improved error handling.
 export async function createOneTimeCheckoutSession(
     userId: string,
     email: string,
@@ -103,7 +110,11 @@ export async function createOneTimeCheckoutSession(
     boostMetadata?: { itemId: string; itemCategory: string }
 ): Promise<void> {
 
-    const origin = headers().get('origin') || process.env.NEXT_PUBLIC_URL!;
+    const origin = headers().get('origin') || process.env.NEXT_PUBLIC_URL;
+
+    if (!origin) {
+        throw new Error("Application origin not found.");
+    }
 
     const priceIdEnvVarName = product === 'token' ? 'STRIPE_TOKEN_PRICE_ID' : 'STRIPE_BOOST_PRICE_ID';
     const priceId = process.env[priceIdEnvVarName];
@@ -117,53 +128,71 @@ export async function createOneTimeCheckoutSession(
     }
 
     if (!priceId || !priceId.startsWith('price_')) {
-        const errorMessage = `Server configuration error: The environment variable ${priceIdEnvVarName} is missing or invalid. Please check your apphosting.yaml file and ensure you have replaced the placeholder value.`;
-        console.error(errorMessage);
-        throw new Error(errorMessage);
+        throw new Error(`Configuration Error: Missing Price ID for ${product}.`);
     }
     
     const customerId = await getOrCreateStripeCustomerId(userId, email);
 
-    const checkoutSession = await stripe.checkout.sessions.create({
-        payment_method_types: ['card'],
-        mode: 'payment',
-        customer: customerId,
-        line_items: [{
-            price: priceId,
-            quantity: quantity,
-        }],
-        success_url: `${origin}${successPath}`,
-        cancel_url: `${origin}${product === 'token' ? '/profile/buy-tokens' : `/${boostMetadata?.itemCategory}/${boostMetadata?.itemId}`}`,
-         metadata: {
-            firebaseUID: userId,
-            productType: product,
-            quantity: String(quantity),
-            ...(product === 'boost' && boostMetadata ? {
-                itemId: boostMetadata.itemId,
-                itemCategory: boostMetadata.itemCategory,
-            } : {}),
-        }
-    });
-     if (checkoutSession.url) {
-        redirect(checkoutSession.url);
+    let sessionUrl: string | null = null;
+
+    try {
+        const checkoutSession = await stripe.checkout.sessions.create({
+            payment_method_types: ['card'],
+            mode: 'payment',
+            customer: customerId,
+            line_items: [{
+                price: priceId,
+                quantity: quantity,
+            }],
+            success_url: `${origin}${successPath}`,
+            cancel_url: `${origin}${product === 'token' ? '/profile/buy-tokens' : `/${boostMetadata?.itemCategory}/${boostMetadata?.itemId}`}`,
+             metadata: {
+                firebaseUID: userId,
+                productType: product,
+                quantity: String(quantity),
+                ...(product === 'boost' && boostMetadata ? {
+                    itemId: boostMetadata.itemId,
+                    itemCategory: boostMetadata.itemCategory,
+                } : {}),
+            }
+        });
+        sessionUrl = checkoutSession.url;
+    } catch (error: any) {
+        console.error("Stripe One-Time Purchase Error:", error);
+        throw new Error(`Checkout failed: ${error.message}`);
+    }
+
+    if (sessionUrl) {
+        redirect(sessionUrl);
     } else {
-        throw new Error("Could not create Stripe checkout session.");
+        throw new Error("Stripe did not return a valid checkout URL.");
     }
 }
 
 
 export async function createCustomerPortalSession(userId: string, email: string): Promise<void> {
-    const origin = headers().get('origin') || process.env.NEXT_PUBLIC_URL!;
+    const origin = headers().get('origin') || process.env.NEXT_PUBLIC_URL;
+    
+    if (!origin) throw new Error("Origin not found.");
+
     const customerId = await getOrCreateStripeCustomerId(userId, email);
 
-    const portalSession = await stripe.billingPortal.sessions.create({
-        customer: customerId,
-        return_url: `${origin}/profile/subscription`,
-    });
+    let portalUrl: string | null = null;
 
-    if (portalSession.url) {
-        redirect(portalSession.url);
+    try {
+        const portalSession = await stripe.billingPortal.sessions.create({
+            customer: customerId,
+            return_url: `${origin}/profile/subscription`,
+        });
+        portalUrl = portalSession.url;
+    } catch (error: any) {
+        console.error("Stripe Portal Error:", error);
+        throw new Error(`Could not access billing portal: ${error.message}`);
+    }
+
+    if (portalUrl) {
+        redirect(portalUrl);
     } else {
-        throw new Error("Could not create Stripe customer portal session.");
+        throw new Error("Stripe did not return a valid portal URL.");
     }
 }
