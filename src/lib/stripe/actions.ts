@@ -9,16 +9,7 @@ import Stripe from 'stripe';
 
 type Plan = 'plus' | 'ultimate';
 
-// Simplified map for monthly prices only
-const MONTHLY_PRICE_IDS: Record<Plan, string> = {
-    plus: process.env.STRIPE_PLUS_MONTHLY_ID!,
-    ultimate: process.env.STRIPE_ULTIMATE_MONTHLY_ID!,
-};
-
-const TOKEN_PRICE_ID = process.env.STRIPE_TOKEN_PRICE_ID!; 
-const BOOST_PRICE_ID = process.env.STRIPE_BOOST_PRICE_ID!; 
-
-
+// This function remains the same, as it's robust.
 async function getOrCreateStripeCustomerId(userId: string, email: string): Promise<string> {
     const userRef = db.collection('users').doc(userId);
     const userSnap = await userRef.get();
@@ -32,7 +23,6 @@ async function getOrCreateStripeCustomerId(userId: string, email: string): Promi
         return userData.stripeCustomerId;
     }
 
-    // Create a new customer in Stripe
     const customer = await stripe.customers.create({
         email: email,
         name: userData.displayName,
@@ -41,7 +31,6 @@ async function getOrCreateStripeCustomerId(userId: string, email: string): Promi
         },
     });
 
-    // Save the new Stripe customer ID to the user's profile in Firestore
     await userRef.update({
         stripeCustomerId: customer.id,
     });
@@ -49,7 +38,7 @@ async function getOrCreateStripeCustomerId(userId: string, email: string): Promi
     return customer.id;
 }
 
-
+// This function has improved error handling to be more specific.
 export async function createCheckoutSession(
     userId: string,
     email: string,
@@ -57,11 +46,14 @@ export async function createCheckoutSession(
 ): Promise<void> {
 
     const origin = headers().get('origin') || process.env.NEXT_PUBLIC_URL!;
-    const priceId = MONTHLY_PRICE_IDS[plan];
+    
+    const priceIdEnvVarName = plan === 'plus' ? 'STRIPE_PLUS_MONTHLY_ID' : 'STRIPE_ULTIMATE_MONTHLY_ID';
+    const priceId = process.env[priceIdEnvVarName];
 
     if (!priceId || !priceId.startsWith('price_')) {
-        console.error(`Stripe Price ID for plan '${plan}' is missing or invalid. Value: '${priceId}'`);
-        throw new Error(`Server configuration error: The price for the '${plan}' plan is not set up correctly. Please contact support.`);
+        const errorMessage = `Server configuration error: The environment variable ${priceIdEnvVarName} is missing or invalid. Please check your apphosting.yaml file and ensure you have replaced the placeholder value.`;
+        console.error(errorMessage);
+        throw new Error(errorMessage);
     }
 
     const customerId = await getOrCreateStripeCustomerId(userId, email);
@@ -89,6 +81,7 @@ export async function createCheckoutSession(
     }
 }
 
+// This function also has improved error handling.
 export async function createOneTimeCheckoutSession(
     userId: string,
     email: string,
@@ -99,7 +92,9 @@ export async function createOneTimeCheckoutSession(
 
     const origin = headers().get('origin') || process.env.NEXT_PUBLIC_URL!;
 
-    const priceId = product === 'token' ? TOKEN_PRICE_ID : BOOST_PRICE_ID;
+    const priceIdEnvVarName = product === 'token' ? 'STRIPE_TOKEN_PRICE_ID' : 'STRIPE_BOOST_PRICE_ID';
+    const priceId = process.env[priceIdEnvVarName];
+
     const successPath = product === 'token' 
         ? '/retailer/dashboard?payment_success=true'
         : `/${boostMetadata?.itemCategory}/${boostMetadata?.itemId}?boost_success=true`;
@@ -109,8 +104,9 @@ export async function createOneTimeCheckoutSession(
     }
 
     if (!priceId || !priceId.startsWith('price_')) {
-        console.error(`Stripe one-time product Price ID for '${product}' is missing or invalid. Value: '${priceId}'`);
-        throw new Error(`Server configuration error: The price for '${product}' is not set up correctly.`);
+        const errorMessage = `Server configuration error: The environment variable ${priceIdEnvVarName} is missing or invalid. Please check your apphosting.yaml file and ensure you have replaced the placeholder value.`;
+        console.error(errorMessage);
+        throw new Error(errorMessage);
     }
     
     const customerId = await getOrCreateStripeCustomerId(userId, email);
