@@ -9,34 +9,47 @@ import Stripe from 'stripe';
 
 type Plan = 'plus' | 'ultimate';
 
-// This function remains the same, as it's robust.
+// This function is now transactional to prevent race conditions.
 async function getOrCreateStripeCustomerId(userId: string, email: string): Promise<string> {
     const userRef = db.collection('users').doc(userId);
-    const userSnap = await userRef.get();
 
-    if (!userSnap.exists) {
-        throw new Error("User profile not found.");
+    try {
+        const customerId = await db.runTransaction(async (transaction) => {
+            const userSnap = await transaction.get(userRef);
+
+            if (!userSnap.exists) {
+                throw new Error("User profile not found.");
+            }
+
+            const userData = userSnap.data()!;
+            // Check for a valid, existing Stripe Customer ID
+            if (userData.stripeCustomerId && userData.stripeCustomerId.startsWith('cus_')) {
+                return userData.stripeCustomerId;
+            }
+
+            // User exists but has no Stripe customer ID, create one.
+            const customer = await stripe.customers.create({
+                email: email,
+                name: userData.displayName,
+                metadata: {
+                    firebaseUID: userId,
+                },
+            });
+
+            // Update the user document with the new ID within the transaction.
+            transaction.update(userRef, { stripeCustomerId: customer.id });
+
+            return customer.id;
+        });
+        return customerId;
+    } catch (error) {
+        console.error("Error in getOrCreateStripeCustomerId transaction:", error);
+        // Re-throw the error to be handled by the calling function.
+        // This will ensure the user sees a descriptive error toast.
+        throw new Error('Could not create or retrieve customer details. Please try again.');
     }
-
-    const userData = userSnap.data()!;
-    if (userData.stripeCustomerId) {
-        return userData.stripeCustomerId;
-    }
-
-    const customer = await stripe.customers.create({
-        email: email,
-        name: userData.displayName,
-        metadata: {
-            firebaseUID: userId,
-        },
-    });
-
-    await userRef.update({
-        stripeCustomerId: customer.id,
-    });
-
-    return customer.id;
 }
+
 
 // This function has improved error handling to be more specific.
 export async function createCheckoutSession(
