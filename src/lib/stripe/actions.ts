@@ -56,14 +56,8 @@ export async function createCheckoutSession(
     plan: 'plus' | 'ultimate'
 ): Promise<void> {
 
-    console.log("Attempting to create checkout session for plan:", plan);
-
     const origin = headers().get('origin') || process.env.NEXT_PUBLIC_URL!;
-    console.log("Checkout origin:", origin);
-
     const priceId = MONTHLY_PRICE_IDS[plan];
-    console.log(`Retrieved Price ID for ${plan}: ${priceId}`);
-
 
     if (!priceId || !priceId.startsWith('price_')) {
         console.error(`Stripe Price ID for plan '${plan}' is missing or invalid. Value: '${priceId}'`);
@@ -84,6 +78,7 @@ export async function createCheckoutSession(
         cancel_url: `${origin}/profile/subscription`,
         metadata: {
             firebaseUID: userId,
+            plan: plan,
         }
     });
 

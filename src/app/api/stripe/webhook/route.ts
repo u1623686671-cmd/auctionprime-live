@@ -7,9 +7,8 @@ import { Timestamp } from 'firebase-admin/firestore';
 
 const relevantEvents = new Set([
   'checkout.session.completed',
-  'customer.subscription.created',
-  'customer.subscription.updated',
   'customer.subscription.deleted',
+  'customer.subscription.updated',
 ]);
 
 export async function POST(req: NextRequest) {
@@ -37,31 +36,26 @@ export async function POST(req: NextRequest) {
         case 'checkout.session.completed':
           await handleCheckoutSessionCompleted(event.data.object as Stripe.Checkout.Session);
           break;
-        case 'customer.subscription.created':
         case 'customer.subscription.updated':
+          await handleSubscriptionUpdated(event.data.object as Stripe.Subscription);
+          break;
         case 'customer.subscription.deleted':
-          await handleSubscriptionChange(event.data.object as Stripe.Subscription);
+          await handleSubscriptionDeleted(event.data.object as Stripe.Subscription);
           break;
         default:
-          // This case should theoretically never be reached due to the `relevantEvents` check.
           throw new Error(`Unhandled relevant event type: ${event.type}`);
       }
     } catch (error) {
       console.error('Webhook handler error:', error);
-      // Return 500 to indicate an internal error to Stripe, but we've logged it.
       return new NextResponse('Webhook handler failed. See server logs for details.', { status: 500 });
     }
-  } else {
-    // Acknowledge receipt of an event we don't care about.
-    console.log(`Received and ignored irrelevant event type: ${event.type}`);
   }
 
-  // Return 200 OK to Stripe
   return new NextResponse(JSON.stringify({ received: true }), { status: 200 });
 }
 
 async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) {
-    const { metadata } = session;
+    const { metadata, customer, subscription } = session;
     const userId = metadata?.firebaseUID;
 
     if (!userId) {
@@ -75,21 +69,43 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
         console.error(`User ${userId} not found in Firestore.`);
         return;
     }
-    
+    const userProfile = userDoc.data()!;
+
     if (session.mode === 'subscription') {
-        const subscriptionId = session.subscription as string;
-        await userRef.update({
-            stripeSubscriptionId: subscriptionId,
-            stripeCustomerId: session.customer as string,
-        });
-        // Subscription benefits are handled by `customer.subscription.created/updated`
+        const plan = metadata?.plan as 'plus' | 'ultimate' | undefined;
+        if (!plan) {
+            console.error('Subscription checkout session completed without a plan in metadata.');
+            return;
+        }
+
+        const subscriptionDetails = await stripe.subscriptions.retrieve(subscription as string);
+
+        const updateData: any = {
+            stripeSubscriptionId: subscription,
+            stripeCustomerId: customer,
+            isPlusUser: plan === 'plus',
+            isUltimateUser: plan === 'ultimate',
+            subscriptionBillingCycle: 'monthly', // Only monthly is supported
+            subscriptionRenewalDate: Timestamp.fromDate(new Date(subscriptionDetails.current_period_end * 1000)),
+        };
+
+        // Grant initial tokens for a new subscription
+        if (plan === 'plus') {
+            updateData.promotionTokens = (userProfile.promotionTokens || 0) + 1;
+        } else if (plan === 'ultimate') {
+            updateData.promotionTokens = (userProfile.promotionTokens || 0) + 5;
+            updateData.extendTokens = (userProfile.extendTokens || 0) + 10;
+        }
+
+        await userRef.update(updateData);
+        console.log(`Successfully provisioned '${plan}' plan for user ${userId}`);
+
     } else if (session.mode === 'payment') {
         const productType = metadata?.productType as 'token' | 'boost';
         const quantity = Number(metadata?.quantity || '0');
 
         if (productType === 'token') {
-            const currentTokens = userDoc.data()?.extendTokens || 0;
-            await userRef.update({ extendTokens: currentTokens + quantity });
+            await userRef.update({ extendTokens: (userProfile.extendTokens || 0) + quantity });
             console.log(`Provisioned ${quantity} ${productType}(s) for user ${userId}`);
         } else if (productType === 'boost') {
             const itemId = metadata?.itemId;
@@ -107,70 +123,51 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
     }
 }
 
-async function handleSubscriptionChange(subscription: Stripe.Subscription) {
+async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
     const customerId = subscription.customer as string;
     const usersQuery = db.collection('users').where('stripeCustomerId', '==', customerId).limit(1);
     const userSnapshot = await usersQuery.get();
 
     if (userSnapshot.empty) {
-        console.error(`No user found with Stripe customer ID ${customerId}`);
+        console.error(`Webhook: No user found with Stripe customer ID ${customerId} for subscription update.`);
         return;
     }
     
-    const userDoc = userSnapshot.docs[0];
-    const userRef = userDoc.ref;
+    const userRef = userSnapshot.docs[0].ref;
 
-    if (subscription.status === 'canceled' || subscription.status === 'incomplete_expired' || subscription.status === 'unpaid') {
-        await userRef.update({
-            isPlusUser: false,
-            isUltimateUser: false,
-            subscriptionBillingCycle: null,
-            stripeSubscriptionId: null,
-            subscriptionRenewalDate: null,
-        });
-        console.log(`Deactivated subscription for user ${userDoc.id} due to status: ${subscription.status}`);
+    // This event is fired for many reasons (e.g. plan changes, payment method updates).
+    // Its main job here is to ensure the renewal date is always current.
+    // NOTE: This could also grant renewal tokens if invoice.paid is not used, but that can be complex.
+    // For now, we only grant tokens on initial checkout.
+    await userRef.update({
+        subscriptionRenewalDate: Timestamp.fromDate(new Date(subscription.current_period_end * 1000)),
+    });
+
+    console.log(`Updated subscription renewal date for user ${userRef.id}`);
+}
+
+async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
+    const customerId = subscription.customer as string;
+    const usersQuery = db.collection('users').where('stripeCustomerId', '==', customerId).limit(1);
+    const userSnapshot = await usersQuery.get();
+
+    if (userSnapshot.empty) {
+        // It's possible to get a deletion event for a customer who never fully signed up.
+        console.warn(`Webhook: No user found with Stripe customer ID ${customerId} for subscription deletion.`);
         return;
     }
     
-    const priceId = subscription.items.data[0].price.id;
+    const userRef = userSnapshot.docs[0].ref;
 
-    const priceIdToPlan: Record<string, { plan: 'plus' | 'ultimate', cycle: 'monthly' }> = {
-        [process.env.STRIPE_PLUS_MONTHLY_ID || '']: { plan: 'plus', cycle: 'monthly' },
-        [process.env.STRIPE_ULTIMATE_MONTHLY_ID || '']: { plan: 'ultimate', cycle: 'monthly' },
-    };
-    
-    const planInfo = priceIdToPlan[priceId];
+    // Subscription is cancelled immediately or at period end.
+    // Remove all subscription benefits from the user.
+    await userRef.update({
+        isPlusUser: false,
+        isUltimateUser: false,
+        subscriptionBillingCycle: null,
+        stripeSubscriptionId: null, // Set to null as it's no longer active
+        subscriptionRenewalDate: null,
+    });
 
-    if (!planInfo) {
-        // IMPORTANT: Log the unrecognized price ID but do not throw an error.
-        // This prevents an old or invalid subscription plan from breaking the webhook for all users.
-        console.warn(`Webhook received an unrecognized subscription price ID: '${priceId}'. This plan will be ignored.`);
-        return; // Gracefully exit without erroring.
-    }
-
-    const renewalDate = new Date(subscription.current_period_end * 1000);
-    
-    const updateData: any = {
-        isPlusUser: planInfo.plan === 'plus',
-        isUltimateUser: planInfo.plan === 'ultimate',
-        subscriptionBillingCycle: planInfo.cycle,
-        stripeSubscriptionId: subscription.id,
-        subscriptionRenewalDate: Timestamp.fromDate(renewalDate)
-    };
-
-    // Grant tokens on new subscriptions or renewals
-    const userProfile = userDoc.data();
-    if (!userProfile?.stripeSubscriptionId || subscription.id !== userProfile.stripeSubscriptionId) {
-        // This is a new subscription or a plan change, grant tokens
-        if(planInfo.plan === 'plus'){
-            updateData.promotionTokens = (userProfile.promotionTokens || 0) + 1;
-        }
-        else if (planInfo.plan === 'ultimate'){
-            updateData.promotionTokens = (userProfile.promotionTokens || 0) + 5;
-            updateData.extendTokens = (userProfile.extendTokens || 0) + 10;
-        }
-    }
-    
-    await userRef.update(updateData);
-    console.log(`Successfully updated subscription for user ${userDoc.id} to plan: ${planInfo.plan}`);
+    console.log(`Deactivated subscription for user ${userRef.id} due to status: ${subscription.status}`);
 }
