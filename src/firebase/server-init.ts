@@ -1,12 +1,19 @@
 
-import { initializeApp, getApps, getApp } from 'firebase-admin/app';
+import { initializeApp, getApps, getApp, AppOptions } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 
 if (!getApps().length) {
-  // By calling initializeApp() with no arguments, the Admin SDK will automatically
-  // use the default service account credentials provided by the App Hosting environment.
-  // This is the correct way to initialize in a deployed Google Cloud environment.
-  initializeApp();
+  let config: AppOptions | undefined = undefined;
+  try {
+    if (process.env.FIREBASE_CONFIG) {
+        config = JSON.parse(process.env.FIREBASE_CONFIG);
+    }
+  } catch (e) {
+      console.error("Failed to parse FIREBASE_CONFIG, initializing with default.", e);
+  }
+  // initializeApp() with no arguments uses Application Default Credentials,
+  // which is correct for App Hosting. Providing the parsed config adds robustness.
+  initializeApp(config);
 }
 
 export const db = getFirestore();
