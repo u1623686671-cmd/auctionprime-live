@@ -339,7 +339,3 @@ export default function UpcomingAuctionsPage() {
     </div>
   );
 }
-
-    
-
-    

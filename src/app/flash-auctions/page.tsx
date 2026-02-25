@@ -343,7 +343,3 @@ export default function FlashAuctionsPage() {
     </div>
   );
 }
-
-    
-
-    

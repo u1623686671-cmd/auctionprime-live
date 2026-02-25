@@ -347,9 +347,3 @@ export default function TopPicksPage() {
     </div>
   );
 }
-
-    
-
-    
-
-    
