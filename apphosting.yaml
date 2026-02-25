@@ -21,8 +21,8 @@ env:
     value: "price_YOUR_BOOST_PRICE_ID"
 
   # Grant access to secrets in Cloud Secret Manager.
-  # These are added via the Firebase Console, not here directly.
-  # - variable: STRIPE_API_KEY
-  #   secret: STRIPE_API_KEY
-  # - variable: STRIPE_WEBHOOK_SECRET
-  #   secret: STRIPE_WEBHOOK_SECRET
+  # These are the secrets you created in the Firebase Console.
+  - variable: STRIPE_API_KEY
+    secret: STRIPE_API_KEY
+  - variable: STRIPE_WEBHOOK_SECRET
+    secret: STRIPE_WEBHOOK_SECRET
