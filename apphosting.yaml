@@ -9,16 +9,6 @@ runConfig:
 
 # Environment variables and secrets.
 env:
-  # Grant access to secrets in Cloud Secret Manager.
-  # The `secret` name here MUST exactly match the name you create in the Firebase Console.
-  # The actual secret value (sk_... or whsec_...) is NOT stored here.
-  - variable: STRIPE_API_KEY
-    secret: STRIPE_API_KEY
-  - variable: STRIPE_WEBHOOK_SECRET
-    secret: STRIPE_WEBHOOK_SECRET
-
-  # Configure public environment variables.
-  # Replace the placeholder "value" for each Stripe ID with the actual ID from your Stripe dashboard.
   - variable: NEXT_PUBLIC_URL
     value: https://www.auctionprime.one
   - variable: STRIPE_PLUS_MONTHLY_ID
@@ -29,3 +19,10 @@ env:
     value: "price_YOUR_TOKEN_PRICE_ID"
   - variable: STRIPE_BOOST_PRICE_ID
     value: "price_YOUR_BOOST_PRICE_ID"
+
+  # Grant access to secrets in Cloud Secret Manager.
+  # These are added via the Firebase Console, not here directly.
+  # - variable: STRIPE_API_KEY
+  #   secret: STRIPE_API_KEY
+  # - variable: STRIPE_WEBHOOK_SECRET
+  #   secret: STRIPE_WEBHOOK_SECRET

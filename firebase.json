@@ -1,13 +1,26 @@
 {
-  "apphosting": {
-    "backendId": "auctionprime-live",
-    "rootDir": "/",
-    "ignore": [
-      "node_modules",
-      ".git",
-      "firebase-debug.log",
-      "firebase-debug.*.log",
-      "functions"
-    ]
-  }
+  "apphosting": [
+    {
+      "backendId": "auctionprime-live",
+      "rootDir": "/",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log",
+        "functions"
+      ]
+    },
+    {
+      "backendId": "auctionprime-live",
+      "rootDir": "/",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log",
+        "functions"
+      ]
+    }
+  ]
 }
