@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useEffect, useRef } from "react";
@@ -14,8 +13,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { BiddingForm } from "@/components/auctions/bidding-form";
-import { AIValuation } from "@/components/alcohol/ai-valuation";
-import { Gavel, Tag, TrendingUp, Gem, Palette, CreditCard, Phone, Shirt, Wand2 } from "lucide-react";
+import { Gavel, Tag, TrendingUp, Gem, Palette, CreditCard, Phone, Shirt } from "lucide-react";
 import { formatDistanceToNow, isPast } from "date-fns";
 import { BiddingHistory } from "@/components/auctions/bidding-history";
 import { LoadingGavel } from "@/components/ui/loading-gavel";
@@ -198,28 +196,6 @@ export function AuctionDetailView({ itemId, category }: AuctionDetailViewProps) 
       }
       return <div className="grid grid-cols-2 md:grid-cols-2 gap-4 text-sm">{commonDetails}</div>
   }
-
-  const renderAIValuation = () => {
-    if (category === 'alcohol') {
-      const characteristics = `Sub-category: ${item.subcategory}. Rarity: Limited Edition. Age: ${item.age} years.`;
-      const marketTrends = "Market trends for similar items are currently unavailable.";
-      return <AIValuation alcoholCharacteristics={characteristics} marketTrends={marketTrends} />;
-    }
-    const categoryName = category.charAt(0).toUpperCase() + category.slice(1, -1);
-    return (
-        <Card className="bg-secondary/50 border-dashed">
-            <CardHeader>
-                <div className="flex items-center gap-3">
-                    <Wand2 className="w-6 h-6 text-primary" />
-                    <CardTitle className="font-headline text-lg">AI Valuation Tool</CardTitle>
-                </div>
-                <CardDescription>
-                AI valuation for {categoryName} items is coming soon!
-                </CardDescription>
-            </CardHeader>
-        </Card>
-    );
-  }
   
   return (
     <div className="space-y-8">
@@ -308,7 +284,6 @@ export function AuctionDetailView({ itemId, category }: AuctionDetailViewProps) 
                         )}
                       </CardContent>
                   </Card>
-                  {renderAIValuation()}
               </div>
               <div className="space-y-6">
                   <BiddingHistory history={bidsData} />

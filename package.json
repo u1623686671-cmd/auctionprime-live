@@ -4,16 +4,14 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack -p 9002",
-    "genkit:dev": "genkit start -- tsx src/ai/dev.ts",
-    "genkit:watch": "genkit start -- tsx --watch src/ai/dev.ts",
+    "genkit:dev": "echo 'Genkit dev server temporarily disabled'",
+    "genkit:watch": "echo 'Genkit dev server temporarily disabled'",
     "build": "NODE_ENV=production next build",
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@genkit-ai/google-genai": "1.0.0",
-    "@genkit-ai/next": "1.0.0",
     "@hookform/resolvers": "^4.1.3",
     "@radix-ui/react-accordion": "^1.2.3",
     "@radix-ui/react-alert-dialog": "^1.1.6",
@@ -43,7 +41,6 @@
     "embla-carousel-react": "^8.6.0",
     "firebase": "^11.9.1",
     "firebase-admin": "^12.3.0",
-    "genkit": "1.0.0",
     "heic2any": "^0.0.4",
     "lucide-react": "^0.475.0",
     "next": "14.2.3",
@@ -62,19 +59,8 @@
     "@types/node": "20",
     "@types/react": "18.2.0",
     "@types/react-dom": "18.2.0",
-    "genkit-cli": "1.0.0",
     "postcss": "^8",
     "tailwindcss": "^3.4.1",
     "typescript": "5"
-  },
-  "overrides": {
-    "genkit": "1.0.0",
-    "@genkit-ai/core": "1.0.0",
-    "@genkit-ai/ai": "1.0.0",
-    "@genkit-ai/google-genai": "1.0.0",
-    "@genkit-ai/next": "1.0.0",
-    "next": "14.2.3",
-    "react": "18.2.0",
-    "@types/react": "18.2.0"
   }
 }
