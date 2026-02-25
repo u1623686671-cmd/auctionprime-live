@@ -17,10 +17,10 @@ env:
   # IMPORTANT: You MUST replace the placeholders below with the actual API IDs 
   # from your NEW LIVE Stripe account products.
   - variable: STRIPE_PLUS_MONTHLY_ID
-    value: "price_REPLACE_WITH_YOUR_LIVE_PLUS_ID"
+    value: "price_1T4OHgK0UI9TeZnH1NEUNaNF"
   - variable: STRIPE_ULTIMATE_MONTHLY_ID
-    value: "price_REPLACE_WITH_YOUR_LIVE_ULTIMATE_ID"
+    value: "price_1T4OIAK0UI9TeZnH8FzhMmcM"
   - variable: STRIPE_TOKEN_PRICE_ID
-    value: "price_REPLACE_WITH_YOUR_LIVE_TOKEN_ID"
+    value: "price_1T4OIbK0UI9TeZnHOJNK9x9j"
   - variable: STRIPE_BOOST_PRICE_ID
-    value: "price_REPLACE_WITH_YOUR_LIVE_BOOST_ID"
+    value: "price_1T4OJ7K0UI9TeZnHPKuFevmG"
