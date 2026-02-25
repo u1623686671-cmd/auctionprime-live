@@ -72,6 +72,9 @@
     "@genkit-ai/core": "1.0.0",
     "@genkit-ai/ai": "1.0.0",
     "@genkit-ai/google-genai": "1.0.0",
-    "@genkit-ai/next": "1.0.0"
+    "@genkit-ai/next": "1.0.0",
+    "next": "14.2.3",
+    "react": "18.2.0",
+    "@types/react": "18.2.0"
   }
 }
