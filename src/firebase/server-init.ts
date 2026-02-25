@@ -1,24 +1,12 @@
 
-import { initializeApp, getApps, getApp, cert } from 'firebase-admin/app';
+import { initializeApp, getApps, getApp } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 
-let serviceAccount: any;
-
-if (process.env.FIREBASE_SERVICE_ACCOUNT) {
-  try {
-    serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
-  } catch (e: any) {
-    console.error("Failed to parse FIREBASE_SERVICE_ACCOUNT. Please ensure it is a valid, single-line JSON string in your .env file.");
-    // Throw a more descriptive error to be caught by the server action handler.
-    throw new Error("Invalid FIREBASE_SERVICE_ACCOUNT configuration. Check server logs for details.");
-  }
-}
-
-
 if (!getApps().length) {
-  initializeApp({
-    credential: serviceAccount ? cert(serviceAccount) : undefined,
-  });
+  // By calling initializeApp() with no arguments, the Admin SDK will automatically
+  // use the default service account credentials provided by the App Hosting environment.
+  // This is the correct way to initialize in a deployed Google Cloud environment.
+  initializeApp();
 }
 
 export const db = getFirestore();
