@@ -7,60 +7,60 @@ import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import Stripe from 'stripe';
 
-type Plan = 'plus' | 'ultimate';
-
 /**
  * Robustly retrieves or creates a Stripe Customer ID for a given user.
- * It validates that the ID exists in the CURRENT Stripe account to handle
- * account switches (e.g., test to live) gracefully.
+ * It is designed to be "self-healing": if a Customer ID exists in Firestore
+ * but not in the current Stripe account (e.g. after switching from test to live),
+ * it will automatically create a new one and update the database.
  */
 async function getOrCreateStripeCustomerId(userId: string, email: string): Promise<string> {
     const userRef = db.collection('users').doc(userId);
 
-    try {
-        // 1. Get the current profile from Firestore
-        const userDoc = await userRef.get();
-        if (!userDoc.exists) {
-            throw new Error("User profile not found in database.");
-        }
+    // 1. Get the current profile from Firestore
+    const userDoc = await userRef.get();
+    if (!userDoc.exists) {
+        throw new Error("User profile not found in database.");
+    }
 
-        const userData = userDoc.data()!;
-        let existingId = userData.stripeCustomerId;
+    const userData = userDoc.data()!;
+    let existingId = userData.stripeCustomerId;
 
-        // 2. If an ID exists, verify it with the current Stripe account
-        if (existingId && typeof existingId === 'string' && existingId.startsWith('cus_')) {
-            try {
-                const customer = await stripe.customers.retrieve(existingId);
-                // If retrieval succeeds and it's not a 'deleted' placeholder, return it.
-                if (!(customer as Stripe.DeletedCustomer).deleted) {
-                    return existingId;
-                }
-            } catch (error: any) {
-                // If Stripe returns 'resource_missing' or a "No such customer" message, 
-                // the ID belongs to a different account (likely an old test account).
-                const isNotFoundError = 
-                    error.code === 'resource_missing' || 
-                    (error.message && error.message.toLowerCase().includes('no such customer'));
-
-                if (!isNotFoundError) {
-                    throw error;
-                }
-                
-                console.warn(`Stale Customer ID ${existingId} detected. It will be replaced.`);
-                // We proceed to create a new one below.
+    // 2. If an ID exists, verify it with the current Stripe account
+    if (existingId && typeof existingId === 'string' && existingId.startsWith('cus_')) {
+        try {
+            const customer = await stripe.customers.retrieve(existingId);
+            // If retrieval succeeds and it's not a 'deleted' placeholder, return it.
+            if (!(customer as Stripe.DeletedCustomer).deleted) {
+                return existingId;
             }
-        }
+            console.log(`Stripe Customer ${existingId} was previously deleted. Creating a new one.`);
+        } catch (error: any) {
+            // Check specifically for "No such customer" errors
+            const isNotFoundError = 
+                error.code === 'resource_missing' || 
+                (error.message && error.message.toLowerCase().includes('no such customer'));
 
-        // 3. Create a new Customer ID atomically using a transaction
+            if (!isNotFoundError) {
+                // If it's a different error (e.g. network issue), re-throw it.
+                console.error("Stripe retrieval error:", error);
+                throw error;
+            }
+            
+            console.warn(`Stale Customer ID ${existingId} detected (likely from a previous account). It will be replaced.`);
+            // We proceed to create a new one below.
+        }
+    }
+
+    // 3. Create a new Customer ID atomically using a transaction
+    try {
         const newCustomerId = await db.runTransaction(async (transaction) => {
             const tUserSnap = await transaction.get(userRef);
-            if (!tUserSnap.exists) throw new Error("User profile not found.");
+            if (!tUserSnap.exists) throw new Error("User profile not found during transaction.");
             
             const tUserData = tUserSnap.data()!;
             
-            // Double-check inside the transaction to prevent race conditions
+            // Re-verify existingId inside transaction to catch concurrent updates
             if (tUserData.stripeCustomerId && tUserData.stripeCustomerId !== existingId) {
-                // Another process already updated the ID, verify it exists or use it.
                 return tUserData.stripeCustomerId;
             }
 
@@ -78,7 +78,7 @@ async function getOrCreateStripeCustomerId(userId: string, email: string): Promi
 
         return newCustomerId;
     } catch (error: any) {
-        console.error("Critical Error in getOrCreateStripeCustomerId:", error);
+        console.error("Critical Error creating Stripe Customer:", error);
         throw new Error(`Billing connection failed: ${error.message || 'Please try again.'}`);
     }
 }
@@ -93,18 +93,17 @@ export async function createCheckoutSession(
     const origin = headers().get('origin') || process.env.NEXT_PUBLIC_URL;
     
     if (!origin) {
-        throw new Error("Application origin not found. Please contact support.");
+        throw new Error("Application origin not found.");
     }
 
     const priceIdEnvVarName = plan === 'plus' ? 'STRIPE_PLUS_MONTHLY_ID' : 'STRIPE_ULTIMATE_MONTHLY_ID';
     const priceId = process.env[priceIdEnvVarName];
 
     if (!priceId || !priceId.startsWith('price_')) {
-        const errorMessage = `Configuration Error: The Price ID for the ${plan} plan is missing or invalid. Please ensure apphosting.yaml is updated with your LIVE Price IDs.`;
-        console.error(errorMessage);
-        throw new Error(errorMessage);
+        throw new Error(`Configuration Error: Missing Price ID for ${plan}.`);
     }
 
+    // This call is now robust against 'No such customer' errors
     const customerId = await getOrCreateStripeCustomerId(userId, email);
 
     let sessionUrl: string | null = null;
@@ -164,7 +163,7 @@ export async function createOneTimeCheckoutSession(
     }
 
     if (!priceId || !priceId.startsWith('price_')) {
-        throw new Error(`Configuration Error: Missing Price ID for ${product}. Please check apphosting.yaml.`);
+        throw new Error(`Configuration Error: Missing Price ID for ${product}.`);
     }
     
     const customerId = await getOrCreateStripeCustomerId(userId, email);

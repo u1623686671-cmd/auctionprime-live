@@ -14,8 +14,7 @@ env:
     secret: STRIPE_WEBHOOK_SECRET
 
   # --- LIVE PRICE IDs ---
-  # IMPORTANT: You MUST replace the placeholders below with the actual API IDs 
-  # from your NEW LIVE Stripe account products.
+  # IMPORTANT: These IDs correspond to your NEW LIVE Stripe account.
   - variable: STRIPE_PLUS_MONTHLY_ID
     value: "price_1T4OHgK0UI9TeZnH1NEUNaNF"
   - variable: STRIPE_ULTIMATE_MONTHLY_ID
