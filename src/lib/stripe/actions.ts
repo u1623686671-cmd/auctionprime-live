@@ -1,3 +1,4 @@
+
 'use server';
 
 import { stripe } from '@/lib/stripe';
@@ -55,12 +56,18 @@ export async function createCheckoutSession(
     plan: 'plus' | 'ultimate'
 ): Promise<void> {
 
+    console.log("Attempting to create checkout session for plan:", plan);
+
     const origin = headers().get('origin') || process.env.NEXT_PUBLIC_URL!;
+    console.log("Checkout origin:", origin);
 
     const priceId = MONTHLY_PRICE_IDS[plan];
+    console.log(`Retrieved Price ID for ${plan}: ${priceId}`);
+
 
     if (!priceId || !priceId.startsWith('price_')) {
-        throw new Error(`Stripe ${plan} monthly subscription price ID is not configured correctly in your environment variables.`);
+        console.error(`Stripe Price ID for plan '${plan}' is missing or invalid. Value: '${priceId}'`);
+        throw new Error(`Server configuration error: The price for the '${plan}' plan is not set up correctly. Please contact support.`);
     }
 
     const customerId = await getOrCreateStripeCustomerId(userId, email);
@@ -107,7 +114,8 @@ export async function createOneTimeCheckoutSession(
     }
 
     if (!priceId || !priceId.startsWith('price_')) {
-        throw new Error('Stripe one-time product price IDs are not configured correctly in your environment variables.');
+        console.error(`Stripe one-time product Price ID for '${product}' is missing or invalid. Value: '${priceId}'`);
+        throw new Error(`Server configuration error: The price for '${product}' is not set up correctly.`);
     }
     
     const customerId = await getOrCreateStripeCustomerId(userId, email);

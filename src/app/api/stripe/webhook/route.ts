@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
   if (!sig || !webhookSecret) {
-    console.error("Webhook secret or signature not found.");
+    console.error("Stripe webhook error: Signature or secret not found.");
     return new NextResponse('Webhook secret not configured', { status: 400 });
   }
 
@@ -43,14 +43,20 @@ export async function POST(req: NextRequest) {
           await handleSubscriptionChange(event.data.object as Stripe.Subscription);
           break;
         default:
+          // This case should theoretically never be reached due to the `relevantEvents` check.
           throw new Error(`Unhandled relevant event type: ${event.type}`);
       }
     } catch (error) {
       console.error('Webhook handler error:', error);
-      return new NextResponse('Webhook handler failed. See logs.', { status: 500 });
+      // Return 500 to indicate an internal error to Stripe, but we've logged it.
+      return new NextResponse('Webhook handler failed. See server logs for details.', { status: 500 });
     }
+  } else {
+    // Acknowledge receipt of an event we don't care about.
+    console.log(`Received and ignored irrelevant event type: ${event.type}`);
   }
 
+  // Return 200 OK to Stripe
   return new NextResponse(JSON.stringify({ received: true }), { status: 200 });
 }
 
@@ -114,13 +120,15 @@ async function handleSubscriptionChange(subscription: Stripe.Subscription) {
     const userDoc = userSnapshot.docs[0];
     const userRef = userDoc.ref;
 
-    if (subscription.status === 'canceled' || subscription.status === 'incomplete_expired') {
+    if (subscription.status === 'canceled' || subscription.status === 'incomplete_expired' || subscription.status === 'unpaid') {
         await userRef.update({
             isPlusUser: false,
             isUltimateUser: false,
             subscriptionBillingCycle: null,
             stripeSubscriptionId: null,
+            subscriptionRenewalDate: null,
         });
+        console.log(`Deactivated subscription for user ${userDoc.id} due to status: ${subscription.status}`);
         return;
     }
     
@@ -134,8 +142,10 @@ async function handleSubscriptionChange(subscription: Stripe.Subscription) {
     const planInfo = priceIdToPlan[priceId];
 
     if (!planInfo) {
-        console.error(`Could not map price ID ${priceId} to a plan. Make sure env vars are set.`);
-        return;
+        // IMPORTANT: Log the unrecognized price ID but do not throw an error.
+        // This prevents an old or invalid subscription plan from breaking the webhook for all users.
+        console.warn(`Webhook received an unrecognized subscription price ID: '${priceId}'. This plan will be ignored.`);
+        return; // Gracefully exit without erroring.
     }
 
     const renewalDate = new Date(subscription.current_period_end * 1000);
@@ -162,4 +172,5 @@ async function handleSubscriptionChange(subscription: Stripe.Subscription) {
     }
     
     await userRef.update(updateData);
+    console.log(`Successfully updated subscription for user ${userDoc.id} to plan: ${planInfo.plan}`);
 }
