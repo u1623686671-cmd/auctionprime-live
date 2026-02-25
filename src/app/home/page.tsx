@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useEffect, useState, useMemo, useCallback } from "react";
@@ -526,6 +525,7 @@ export default function HomePage() {
                             <Plus className="h-4 w-4" />
                             Add item
                         </Button>
+                        <NotificationBell />
                     </div>
                     
                     <div className="hidden md:flex items-center gap-2">

@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useEffect, useState, useMemo, useCallback } from "react";
@@ -489,7 +488,7 @@ export default function HomePage() {
           <DialogHeader className="sr-only"><DialogTitle>Auction Details</DialogTitle><DialogDescription>Viewing details for the selected item.</DialogDescription></DialogHeader>
           <ScrollArea className="h-full w-full">
             <div className="p-4 pt-8 sm:p-6 sm:pt-6">
-              {selectedItem && <AuctionDetailView itemId={selectedItem.id} category={selectedItem.category} />}
+              {selectedItem && <AuctionDetailView itemId={selectedItem.id} category={selectedCategoryData?.collection || 'others'} />}
             </div>
           </ScrollArea>
         </DialogContent>
@@ -526,6 +525,7 @@ export default function HomePage() {
                             <Plus className="h-4 w-4" />
                             Add item
                         </Button>
+                        <NotificationBell />
                     </div>
                     
                     <div className="hidden md:flex items-center gap-2">
