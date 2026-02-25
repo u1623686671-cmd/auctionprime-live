@@ -18,10 +18,10 @@ env:
   # You can safely paste their values directly here.
   # Find these in your Stripe Dashboard under Products.
   - variable: STRIPE_PLUS_MONTHLY_ID
-    value: "price_1T4OHgK0UI9TeZnH1NEUNaNF" # <-- REPLACE THIS VALUE
+    value: "price_REPLACE_WITH_YOUR_LIVE_PLUS_ID"
   - variable: STRIPE_ULTIMATE_MONTHLY_ID
-    value: "price_1T4OIAK0UI9TeZnH8FzhMmcM" # <-- REPLACE THIS VALUE
+    value: "price_REPLACE_WITH_YOUR_LIVE_ULTIMATE_ID"
   - variable: STRIPE_TOKEN_PRICE_ID
-    value: "price_1T4OIbK0UI9TeZnHOJNK9x9j" # <-- REPLACE THIS VALUE
+    value: "price_REPLACE_WITH_YOUR_LIVE_TOKEN_ID"
   - variable: STRIPE_BOOST_PRICE_ID
-    value: "price_1T4OJ7K0UI9TeZnHPKuFevmG" # <-- REPLACE THIS VALUE
+    value: "price_REPLACE_WITH_YOUR_LIVE_BOOST_ID"
