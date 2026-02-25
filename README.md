@@ -9,3 +9,5 @@ To get started, take a look at src/app/page.tsx.
 This project uses a `.env` file for local development. However, for the live production environment, secrets like API keys are managed securely through Firebase App Hosting secrets.
 
 You do not need to add your production secrets to the `.env` file.
+
+<!-- Forcing git update -->
