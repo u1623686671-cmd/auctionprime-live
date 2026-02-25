@@ -2,17 +2,12 @@
 # See https://firebase.google.com/docs/app-hosting/configure#cloud-run
 runConfig:
   minInstances: 0
-  # maxInstances: 100
-  # concurrency: 80
-  # cpu: 1
-  # memoryMiB: 512
 
 # Environment variables and secrets.
-# See https://firebase.google.com/docs/app-hosting/configure#user-defined-environment
 env:
   # Public environment variables for Stripe prices
   - variable: NEXT_PUBLIC_URL
-    value: "https://www.auctionprime.one"
+    value: https://www.auctionprime.one
   - variable: STRIPE_PLUS_MONTHLY_ID
     value: "price_1T4OHgK0UI9TeZnH1NEUNaNF"
   - variable: STRIPE_ULTIMATE_MONTHLY_ID
@@ -21,10 +16,8 @@ env:
     value: "price_1T4OIbK0UI9TeZnHOJNK9x9j"
   - variable: STRIPE_BOOST_PRICE_ID
     value: "price_1T4OJ7K0UI9TeZnHPKuFevmG"
-  
-  # Secret environment variables. The values for these are stored securely in 
-  # Google Cloud Secret Manager and should be configured in the Firebase Console.
-  # See https://firebase.google.com/docs/app-hosting/configure#secret-parameters
+
+  # Secure secrets managed by Firebase Secret Manager
   - variable: STRIPE_API_KEY
     secret: STRIPE_API_KEY
   - variable: STRIPE_WEBHOOK_SECRET
