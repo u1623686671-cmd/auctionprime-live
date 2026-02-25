@@ -188,7 +188,7 @@ export function AuctionSettingsForm({ form }: AuctionSettingsFormProps) {
                         render={({ field }) => (
                         <FormItem>
                             <FormLabel className="text-xs text-muted-foreground">Duration</FormLabel>
-                            <Select onValueChange={(value) => field.onChange(parseInt(value))} defaultValue={field.value?.toString()}>
+                            <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value?.toString()}>
                                 <FormControl>
                                 <SelectTrigger>
                                     <SelectValue placeholder="Select a short duration" />
@@ -218,7 +218,7 @@ export function AuctionSettingsForm({ form }: AuctionSettingsFormProps) {
                     render={({ field }) => (
                     <FormItem>
                         <FormLabel>Auction Duration</FormLabel>
-                        <Select onValueChange={(value) => field.onChange(parseInt(value))} defaultValue={field.value?.toString()}>
+                        <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value?.toString()}>
                             <FormControl>
                             <SelectTrigger>
                                 <SelectValue placeholder="Select duration" />
@@ -246,5 +246,3 @@ export function AuctionSettingsForm({ form }: AuctionSettingsFormProps) {
         </>
     )
 }
-
-    

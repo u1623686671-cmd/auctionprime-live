@@ -141,7 +141,7 @@ const AlcoholFormFields = () => (
             render={({ field }) => (
                 <FormItem>
                     <FormLabel>Sub-category</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                             <SelectTrigger>
                                 <SelectValue placeholder="Select a sub-category" />
@@ -176,7 +176,7 @@ const ArtFormFields = () => (
             render={({ field }) => (
                 <FormItem>
                     <FormLabel>Type of Art</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                             <SelectTrigger>
                                 <SelectValue placeholder="Select a type" />
@@ -269,7 +269,7 @@ const ApparelFormFields = () => (
             render={({ field }) => (
                 <FormItem>
                     <FormLabel>Sub-category</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                             <SelectTrigger>
                                 <SelectValue placeholder="Select a sub-category" />

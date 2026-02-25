@@ -32,7 +32,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import { NewListingFlow } from "@/components/retailer/NewListingFlow";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { useIsMobile } from "@/hooks/use-is-mobile";
 import { Skeleton } from "@/components/ui/skeleton";
 import { WatchlistButton } from "@/components/auctions/watchlist-button";
 import { cn } from "@/lib/utils";
@@ -318,7 +318,7 @@ export default function HomePage() {
                                 const isPhoneNumber = item.category === 'phoneNumbers';
                                 let imageUrl = !isPlate && !isPhoneNumber ? ((item.imageUrls && item.imageUrls[0]) || `https://picsum.photos/seed/${item.id}/200/200`) : '';
                                 return (
-                                    <div key={item.id} className="absolute w-2/3 aspect-square rounded-md overflow-hidden bg-muted border transition-transform duration-300 ease-in-out group-hover:rotate-0" style={{ transform: `rotate(${index * 8 - 8}deg)`, zIndex: 3 - index, }}>
+                                    <div key={`view-all-${item.id}-${index}`} className="absolute w-2/3 aspect-square rounded-md overflow-hidden bg-muted border transition-transform duration-300 ease-in-out group-hover:rotate-0" style={{ transform: `rotate(${index * 8 - 8}deg)`, zIndex: 3 - index, }}>
                                         {isPlate ? <div className="flex items-center justify-center h-full"><LebanesePlateDisplay plateNumber={item.itemName} /></div> : isPhoneNumber ? <div className="flex items-center justify-center h-full"><PhoneNumberDisplay phoneNumber={item.itemName} size="small" /></div> : <Image src={imageUrl} alt="" fill className="object-cover" />}
                                     </div>
                                 );
@@ -454,7 +454,7 @@ export default function HomePage() {
                     
                         <CardFooter className="p-4 flex flex-col sm:flex-row sm:justify-end gap-2">
                             <Button
-                                onClick={(e) => { e.stopPropagation(); handleItemSelect({ id: item.id, category: collectionName })}}
+                                onClick={(e) => { e.stopPropagation(); handleItemSelect({ id: item.id, category: item.category })}}
                                 size="sm"
                                 variant="outline"
                                 className="w-full sm:w-auto"
