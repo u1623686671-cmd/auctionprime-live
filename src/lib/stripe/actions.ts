@@ -1,3 +1,4 @@
+
 'use server';
 
 import { stripe } from '@/lib/stripe';
@@ -33,7 +34,7 @@ async function getOrCreateStripeCustomerId(userId: string, email: string): Promi
                 return existingId;
             }
         } catch (error: any) {
-            // If the customer isn't found (e.g. account switch), we'll create a new one.
+            // Handle the specific "No such customer" error explicitly
             const isNotFoundError = 
                 error.code === 'resource_missing' || 
                 (error.message && error.message.toLowerCase().includes('no such customer'));
@@ -42,7 +43,7 @@ async function getOrCreateStripeCustomerId(userId: string, email: string): Promi
                 console.error("Stripe retrieval error:", error);
                 throw error;
             }
-            // Customer not found, proceed to create
+            // Customer not found in this account, proceed to create a new one
         }
     }
 
@@ -105,7 +106,8 @@ export async function createCheckoutSession(
 
     try {
         const checkoutSession = await stripe.checkout.sessions.create({
-            payment_method_types: ['card'],
+            // Use automatic payment methods to prioritize saved cards
+            automatic_payment_methods: { enabled: true },
             mode: 'subscription',
             customer: customerId,
             line_items: [{
@@ -167,7 +169,8 @@ export async function createOneTimeCheckoutSession(
 
     try {
         const checkoutSession = await stripe.checkout.sessions.create({
-            payment_method_types: ['card'],
+            // Use automatic payment methods to prioritize saved cards
+            automatic_payment_methods: { enabled: true },
             mode: 'payment',
             customer: customerId,
             line_items: [{
