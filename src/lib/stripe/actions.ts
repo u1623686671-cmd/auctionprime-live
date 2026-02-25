@@ -24,6 +24,29 @@ const BOOST_PRICE_ID = process.env.STRIPE_BOOST_PRICE_ID!;
 
 
 async function getOrCreateStripeCustomerId(userId: string, email: string): Promise<string> {
+    // --- TEMPORARY WORKAROUND FOR LOCAL PREVIEW ---
+    // The local preview server may have issues authenticating with the Firebase Admin SDK.
+    // This temporary logic skips reading/writing to Firestore and *always* creates a new
+    // Stripe customer. This allows the checkout flow to be tested in the preview.
+    // The original code for the live environment is commented out below.
+    if (process.env.NODE_ENV === 'development') {
+        console.log("--- STRIPE ACTION (PREVIEW MODE) ---");
+        console.log("Skipping Firestore check. Creating a new Stripe customer for this session.");
+
+        const customer = await stripe.customers.create({
+            email: email,
+            metadata: {
+                firebaseUID: userId,
+            },
+        });
+        
+        console.log(`Created new Stripe customer for preview: ${customer.id}`);
+        return customer.id;
+    }
+    // --- END TEMPORARY WORKAROUND ---
+
+    
+    // Original production code:
     const userRef = db.collection('users').doc(userId);
     const userSnap = await userRef.get();
 
