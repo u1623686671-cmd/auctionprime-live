@@ -454,7 +454,7 @@ export default function HomePage() {
                     
                         <CardFooter className="p-4 flex flex-col sm:flex-row sm:justify-end gap-2">
                             <Button
-                                onClick={(e) => { e.stopPropagation(); handleItemSelect({ id: item.id, category: item.category })}}
+                                onClick={(e) => { e.stopPropagation(); handleItemSelect({ id: item.id, category: collectionName })}}
                                 size="sm"
                                 variant="outline"
                                 className="w-full sm:w-auto"
@@ -512,7 +512,7 @@ export default function HomePage() {
         <div className="sticky top-0 z-30 w-full border-b bg-card">
             <div className="container mx-auto flex h-16 items-center justify-between px-4">
                 <Link href="/home" className="flex items-center space-x-2 mr-6">
-                    <span className="font-extrabold tracking-tight font-headline text-2xl text-primary">AuctionPrime [Test]</span>
+                    <span className="font-extrabold tracking-tight font-headline text-2xl text-primary">AuctionPrime</span>
                 </Link>
                 <div className="hidden md:block">
                     <TabsList className="grid w-full grid-cols-2 sm:w-auto">
