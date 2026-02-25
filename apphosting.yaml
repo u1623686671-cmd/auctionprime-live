@@ -1,3 +1,4 @@
+
 # Settings for Backend (on Cloud Run).
 # See https://firebase.google.com/docs/app-hosting/configure#cloud-run
 runConfig:
@@ -6,21 +7,21 @@ runConfig:
 # Environment variables and secrets.
 env:
   # --- SECRETS ---
-  # These are your Stripe API keys. They are SECRET.
-  # Set their values using the `firebase apphosting:secrets:set` commands.
+  # These are your NEW LIVE Stripe API keys. 
+  # Use 'firebase apphosting:secrets:set' to set them.
   - variable: STRIPE_API_KEY
     secret: STRIPE_API_KEY
   - variable: STRIPE_WEBHOOK_SECRET
     secret: STRIPE_WEBHOOK_SECRET
 
-  # --- PUBLIC IDs ---
-  # IMPORTANT: Replace these placeholders with the actual API IDs (price_...) 
-  # from your new LIVE Stripe account products.
+  # --- LIVE PRICE IDs ---
+  # IMPORTANT: Replace the placeholders below with the actual API IDs 
+  # from your NEW LIVE Stripe account products.
   - variable: STRIPE_PLUS_MONTHLY_ID
-    value: "price_1T4OHgK0UI9TeZnH1NEUNaNF"
+    value: "price_REPLACE_WITH_YOUR_LIVE_PLUS_ID"
   - variable: STRIPE_ULTIMATE_MONTHLY_ID
-    value: "price_1T4OIAK0UI9TeZnH8FzhMmcM"
+    value: "price_REPLACE_WITH_YOUR_LIVE_ULTIMATE_ID"
   - variable: STRIPE_TOKEN_PRICE_ID
-    value: "price_1T4OIbK0UI9TeZnHOJNK9x9j"
+    value: "price_REPLACE_WITH_YOUR_LIVE_TOKEN_ID"
   - variable: STRIPE_BOOST_PRICE_ID
-    value: "price_1T4OJ7K0UI9TeZnHPKuFevmG"
+    value: "price_REPLACE_WITH_YOUR_LIVE_BOOST_ID"

@@ -1,3 +1,4 @@
+
 'use server';
 
 import { stripe } from '@/lib/stripe';
@@ -8,39 +9,67 @@ import Stripe from 'stripe';
 
 type Plan = 'plus' | 'ultimate';
 
-// This function is transactional to prevent race conditions and ensure data integrity.
+/**
+ * Robustly retrieves or creates a Stripe Customer ID for a given user.
+ * It validates that the ID exists in the CURRENT Stripe account to handle
+ * account switches (e.g., test to live) gracefully.
+ */
 async function getOrCreateStripeCustomerId(userId: string, email: string): Promise<string> {
     const userRef = db.collection('users').doc(userId);
 
     try {
-        const customerId = await db.runTransaction(async (transaction) => {
-            const userSnap = await transaction.get(userRef);
+        // 1. Get the current profile from Firestore
+        const userDoc = await userRef.get();
+        if (!userDoc.exists) {
+            throw new Error("User profile not found in database.");
+        }
 
-            if (!userSnap.exists) {
-                throw new Error("User profile not found in database.");
+        const userData = userDoc.data()!;
+        let existingId = userData.stripeCustomerId;
+
+        // 2. If an ID exists, verify it with the current Stripe account
+        if (existingId && typeof existingId === 'string' && existingId.startsWith('cus_')) {
+            try {
+                const customer = await stripe.customers.retrieve(existingId);
+                // If retrieval succeeds and it's not a 'deleted' placeholder, return it.
+                if (!(customer as Stripe.DeletedCustomer).deleted) {
+                    return existingId;
+                }
+            } catch (error: any) {
+                // If Stripe returns 'resource_missing', the ID belongs to a different account.
+                // We catch this specific error and proceed to create a new one.
+                if (error.code !== 'resource_missing') {
+                    throw error;
+                }
+                console.warn(`Customer ID ${existingId} not found in the current Stripe account. Regenerating...`);
+            }
+        }
+
+        // 3. Create a new Customer ID atomically using a transaction
+        const newCustomerId = await db.runTransaction(async (transaction) => {
+            const tUserSnap = await transaction.get(userRef);
+            if (!tUserSnap.exists) throw new Error("User profile not found.");
+            
+            const tUserData = tUserSnap.data()!;
+            
+            // Double-check inside the transaction to prevent race conditions
+            if (tUserData.stripeCustomerId && tUserData.stripeCustomerId !== existingId) {
+                return tUserData.stripeCustomerId;
             }
 
-            const userData = userSnap.data()!;
-            // Check for a valid, existing Stripe Customer ID
-            if (userData.stripeCustomerId && typeof userData.stripeCustomerId === 'string' && userData.stripeCustomerId.startsWith('cus_')) {
-                return userData.stripeCustomerId;
-            }
-
-            // User exists but has no Stripe customer ID, create one.
             const customer = await stripe.customers.create({
                 email: email,
-                name: userData.displayName || 'AuctionPrime User',
+                name: tUserData.displayName || 'AuctionPrime User',
                 metadata: {
                     firebaseUID: userId,
                 },
             });
 
-            // Update the user document with the new ID within the transaction.
             transaction.update(userRef, { stripeCustomerId: customer.id });
-
             return customer.id;
         });
-        return customerId;
+
+        return newCustomerId;
     } catch (error: any) {
         console.error("Critical Error in getOrCreateStripeCustomerId:", error);
         throw new Error(`Billing connection failed: ${error.message || 'Please try again.'}`);
@@ -64,7 +93,7 @@ export async function createCheckoutSession(
     const priceId = process.env[priceIdEnvVarName];
 
     if (!priceId || !priceId.startsWith('price_')) {
-        const errorMessage = `Configuration Error: The Price ID for the ${plan} plan is missing or invalid in the server environment.`;
+        const errorMessage = `Configuration Error: The Price ID for the ${plan} plan is missing or invalid in the server environment. Please check apphosting.yaml.`;
         console.error(errorMessage);
         throw new Error(errorMessage);
     }
@@ -128,7 +157,7 @@ export async function createOneTimeCheckoutSession(
     }
 
     if (!priceId || !priceId.startsWith('price_')) {
-        throw new Error(`Configuration Error: Missing Price ID for ${product}.`);
+        throw new Error(`Configuration Error: Missing Price ID for ${product}. Please check apphosting.yaml.`);
     }
     
     const customerId = await getOrCreateStripeCustomerId(userId, email);
