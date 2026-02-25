@@ -489,16 +489,16 @@ export function NewListingFlow({ initialCategory, onSuccess }: NewListingFlowPro
     return (
         <div className="space-y-4">
              {!hasUnlimitedListings && (
-              <div className="p-4 rounded-lg bg-[hsl(var(--info))] border border-[hsl(var(--info-emphasis))] text-[hsl(var(--info-foreground))]">
+              <div className="p-4 rounded-lg bg-info text-info-foreground">
                   <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                       <div className="flex items-start gap-3">
-                          <Info className="h-5 w-5 shrink-0 mt-0.5 text-[hsl(var(--info-emphasis))]" />
+                          <Info className="h-5 w-5 shrink-0 mt-0.5 text-info-emphasis" />
                           <div>
-                              <p className="font-semibold text-base text-[hsl(var(--info-foreground))]">Listing Limit for Basic Accounts</p>
-                              <p className="text-sm opacity-90">You can <b>only</b> publish one listing per 14 days. To get unlimited listings, please upgrade to a <b className="font-semibold">Plus or Ultimate subscription</b>.</p>
+                              <p className="font-semibold text-base">Listing Limit for Basic Accounts</p>
+                              <p className="text-sm opacity-90">You can only publish one listing per 14 days. To get unlimited listings, please upgrade to a <b className="font-semibold">Plus or Ultimate subscription</b>.</p>
                           </div>
                       </div>
-                      <Button asChild size="sm" className="bg-[hsl(var(--info-emphasis))] text-[hsl(var(--info-emphasis-foreground))] hover:bg-[hsl(var(--info-emphasis))]/90 focus-visible:ring-[hsl(var(--info-emphasis))] w-full sm:w-auto shrink-0">
+                      <Button asChild size="sm" className="bg-info-emphasis text-info-emphasis-foreground hover:bg-info-emphasis/90 focus-visible:ring-info-emphasis w-full sm:w-auto shrink-0">
                           <Link href="/profile/subscription">
                               Upgrade Subscription
                           </Link>

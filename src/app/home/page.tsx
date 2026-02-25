@@ -496,15 +496,13 @@ export default function HomePage() {
       </Dialog>
       <Dialog open={isListingDialogOpen} onOpenChange={setIsListingDialogOpen}>
         <DialogContent className="p-0 flex flex-col h-full sm:h-auto sm:max-h-[90vh] sm:max-w-3xl">
-            <div className="flex-1 min-h-0">
-                <ScrollArea className="h-full w-full">
-                    <div className="p-6">
-                        <DialogHeader className="pb-4">
-                            <DialogTitle className="text-2xl font-bold">Create a New Listing</DialogTitle>
-                            <DialogDescription>Select a category and fill in the details for your auction.</DialogDescription>
-                        </DialogHeader>
-                        <NewListingFlow onSuccess={() => setIsListingDialogOpen(false)} />
-                    </div>
+            <DialogHeader className="p-6 pb-0 shrink-0">
+                <DialogTitle className="text-2xl font-bold">Create a New Listing</DialogTitle>
+                <DialogDescription>Select a category and fill in the details for your auction.</DialogDescription>
+            </DialogHeader>
+            <div className="flex-1 min-h-0 px-6">
+                <ScrollArea className="h-full w-full pr-6 -mr-6">
+                    <NewListingFlow onSuccess={() => setIsListingDialogOpen(false)} />
                 </ScrollArea>
             </div>
         </DialogContent>
@@ -514,7 +512,7 @@ export default function HomePage() {
         <div className="sticky top-0 z-30 w-full border-b bg-card">
             <div className="container mx-auto flex h-16 items-center justify-between px-4">
                 <Link href="/home" className="flex items-center space-x-2 mr-6">
-                    <span className="font-extrabold tracking-tight font-headline text-2xl text-primary">AuctionPrime</span>
+                    <span className="font-extrabold tracking-tight font-headline text-2xl text-primary">AuctionPrime [Test]</span>
                 </Link>
                 <div className="hidden md:block">
                     <TabsList className="grid w-full grid-cols-2 sm:w-auto">
@@ -640,5 +638,3 @@ export default function HomePage() {
     </div>
   );
 }
-
-    
