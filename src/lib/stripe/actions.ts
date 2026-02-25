@@ -1,4 +1,3 @@
-
 'use server';
 
 import { stripe } from '@/lib/stripe';
@@ -33,21 +32,17 @@ async function getOrCreateStripeCustomerId(userId: string, email: string): Promi
             if (!(customer as Stripe.DeletedCustomer).deleted) {
                 return existingId;
             }
-            console.log(`Stripe Customer ${existingId} was previously deleted. Creating a new one.`);
         } catch (error: any) {
-            // Check specifically for "No such customer" errors
+            // If the customer isn't found (e.g. account switch), we'll create a new one.
             const isNotFoundError = 
                 error.code === 'resource_missing' || 
                 (error.message && error.message.toLowerCase().includes('no such customer'));
 
             if (!isNotFoundError) {
-                // If it's a different error (e.g. network issue), re-throw it.
                 console.error("Stripe retrieval error:", error);
                 throw error;
             }
-            
-            console.warn(`Stale Customer ID ${existingId} detected (likely from a previous account). It will be replaced.`);
-            // We proceed to create a new one below.
+            // Customer not found, proceed to create
         }
     }
 
@@ -59,8 +54,9 @@ async function getOrCreateStripeCustomerId(userId: string, email: string): Promi
             
             const tUserData = tUserSnap.data()!;
             
-            // Re-verify existingId inside transaction to catch concurrent updates
+            // Re-verify existingId inside transaction
             if (tUserData.stripeCustomerId && tUserData.stripeCustomerId !== existingId) {
+                // Another process might have updated it already, check if it's different
                 return tUserData.stripeCustomerId;
             }
 
@@ -103,7 +99,6 @@ export async function createCheckoutSession(
         throw new Error(`Configuration Error: Missing Price ID for ${plan}.`);
     }
 
-    // This call is now robust against 'No such customer' errors
     const customerId = await getOrCreateStripeCustomerId(userId, email);
 
     let sessionUrl: string | null = null;
@@ -217,7 +212,7 @@ export async function createCustomerPortalSession(userId: string, email: string)
     try {
         const portalSession = await stripe.billingPortal.sessions.create({
             customer: customerId,
-            return_url: `${origin}/profile/subscription`,
+            return_url: `${origin}/profile`,
         });
         portalUrl = portalSession.url;
     } catch (error: any) {

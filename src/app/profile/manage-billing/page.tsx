@@ -1,8 +1,7 @@
-
 'use client';
 
 import Link from 'next/link';
-import { ArrowLeft, CreditCard, Loader2, ShieldCheck, Wallet } from 'lucide-react';
+import { ArrowLeft, CreditCard, Loader2, Wallet, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
@@ -31,7 +30,6 @@ export default function ManageBillingPage() {
     setIsProcessing(true);
     try {
         await createCustomerPortalSession(user.uid, user.email);
-        // User is redirected by the server action
     } catch (error: any) {
         toast({
             variant: 'destructive',
@@ -42,6 +40,12 @@ export default function ManageBillingPage() {
     }
   }
   
+  useEffect(() => {
+    if (!isUserLoading && !user) {
+        router.replace('/login');
+    }
+  }, [isUserLoading, user, router]);
+
   if (isUserLoading || isUserProfileLoading) {
     return (
         <div className="flex h-screen items-center justify-center">
@@ -62,55 +66,44 @@ export default function ManageBillingPage() {
         <Card className="border-0 shadow-xl overflow-hidden">
           <CardHeader className="bg-primary/5 pb-8">
             <CardTitle className="flex items-center gap-3 text-2xl">
-              <CreditCard className="w-8 h-8 text-primary"/>
-              <span>Payment Methods & Billing</span>
+              <Wallet className="w-8 h-8 text-primary"/>
+              <span>Wallet &amp; Billing</span>
             </CardTitle>
             <CardDescription className="text-base pt-1">
-              Securely manage your credit cards and subscription details via Stripe.
+              Manage your saved cards and view your billing history securely.
             </CardDescription>
           </CardHeader>
-          <CardContent className="pt-8 space-y-8">
-            <div className="space-y-4">
-                <h3 className="text-lg font-semibold flex items-center gap-2">
-                    <ShieldCheck className="w-5 h-5 text-green-600" />
-                    Automatic Subscription Renewals
-                </h3>
-                <p className="text-muted-foreground leading-relaxed">
-                    To ensure your <b>Plus</b> or <b>Ultimate</b> benefits never expire, we use Stripe's secure billing system. You can save your card details and manage your default payment method directly in the Stripe Portal.
-                </p>
-            </div>
-
-            <div className="p-4 rounded-xl bg-secondary/50 border border-secondary flex flex-col gap-4">
-                <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-2">
-                        <Wallet className="w-5 h-5 text-primary" />
-                        <span className="font-medium">Current Status</span>
+          <CardContent className="pt-8 space-y-6">
+            <div className="p-6 rounded-xl bg-secondary/30 border border-border flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                    <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+                        <CreditCard className="h-6 w-6 text-primary" />
                     </div>
-                    {isSubscribed ? (
-                        <div className="flex items-center gap-2">
-                            {userProfile?.isUltimateUser ? (
-                                <Badge className="bg-purple-500 text-white hover:bg-purple-500">ULTIMATE</Badge>
-                            ) : (
-                                <Badge className="bg-sky-500 text-white hover:bg-sky-500">PLUS</Badge>
-                            )}
-                            <span className="text-xs text-muted-foreground capitalize">({userProfile?.subscriptionBillingCycle})</span>
-                        </div>
-                    ) : (
-                        <Badge variant="outline">Not Subscribed</Badge>
-                    )}
+                    <div>
+                        <p className="font-semibold text-lg">Saved Payment Methods</p>
+                        <p className="text-sm text-muted-foreground">Add or remove cards for future purchases.</p>
+                    </div>
                 </div>
+                {isSubscribed && (
+                    <div className="hidden sm:block">
+                        {userProfile?.isUltimateUser ? (
+                            <Badge className="bg-purple-500 text-white">ULTIMATE</Badge>
+                        ) : (
+                            <Badge className="bg-sky-500 text-white">PLUS</Badge>
+                        )}
+                    </div>
+                )}
             </div>
 
-            <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 text-sm text-blue-800">
-                <p>
-                    <b>Note:</b> We never store your credit card information on our servers. All payment data is handled securely by Stripe, a global leader in online payments.
-                </p>
+            <div className="flex items-center gap-2 px-2 text-xs text-muted-foreground">
+                <ShieldCheck className="h-4 w-4 text-green-600" />
+                <span>Your payment information is encrypted and stored securely by Stripe.</span>
             </div>
           </CardContent>
-          <CardFooter className="bg-muted/30 p-6">
-                <Button onClick={handleManageBilling} disabled={isProcessing} className="w-full h-12 text-base font-semibold shadow-lg shadow-primary/20">
+          <CardFooter className="p-6">
+                <Button onClick={handleManageBilling} disabled={isProcessing} className="w-full h-12 text-base font-semibold">
                     {isProcessing ? <Loader2 className="mr-2 h-5 w-5 animate-spin"/> : <CreditCard className="mr-2 h-5 w-5" />}
-                    {isSubscribed ? 'Manage Cards & Renewals' : 'Add Payment Method in Stripe'}
+                    Manage Cards &amp; Billing
                 </Button>
           </CardFooter>
         </Card>
