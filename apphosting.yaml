@@ -1,24 +1,31 @@
-# Settings to manage and configure a Firebase App Hosting backend.
-# https://firebase.google.com/docs/app-hosting/configure
-
-# Updated to fix backend configuration.
+# Settings for Backend (on Cloud Run).
+# See https://firebase.google.com/docs/app-hosting/configure#cloud-run
 runConfig:
-  # Increase this value if you'd like to automatically spin up
-  # more instances in response to increased traffic.
-  maxInstances: 1
+  minInstances: 0
+  # maxInstances: 100
+  # concurrency: 80
+  # cpu: 1
+  # memoryMiB: 512
 
+# Environment variables and secrets.
 env:
+  # Grant access to secrets in Cloud Secret Manager.
+  # The `secret` name here MUST exactly match the name you create in the Firebase Console.
+  # The actual secret value (sk_... or whsec_...) is NOT stored here.
   - variable: STRIPE_API_KEY
     secret: STRIPE_API_KEY
   - variable: STRIPE_WEBHOOK_SECRET
     secret: STRIPE_WEBHOOK_SECRET
+
+  # Configure public environment variables.
+  # Replace the placeholder "value" for each Stripe ID with the actual ID from your Stripe dashboard.
   - variable: NEXT_PUBLIC_URL
-    value: "https://auctionprime.one"
+    value: https://www.auctionprime.one
   - variable: STRIPE_PLUS_MONTHLY_ID
-    value: "price_1T4OHgK0UI9TeZnH1NEUNaNF"
+    value: "price_YOUR_PLUS_MONTHLY_ID"
   - variable: STRIPE_ULTIMATE_MONTHLY_ID
-    value: "price_1T4OIAK0UI9TeZnH8FzhMmcM"
+    value: "price_YOUR_ULTIMATE_MONTHLY_ID"
   - variable: STRIPE_TOKEN_PRICE_ID
-    value: "price_1T4OIbK0UI9TeZnHOJNK9x9j"
+    value: "price_YOUR_TOKEN_PRICE_ID"
   - variable: STRIPE_BOOST_PRICE_ID
-    value: "price_1T4OJ7K0UI9TeZnHPKuFevmG"
+    value: "price_YOUR_BOOST_PRICE_ID"
