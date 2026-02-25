@@ -7,15 +7,14 @@ runConfig:
 # Environment variables and secrets.
 env:
   # --- SECRETS ---
-  # These are your NEW LIVE Stripe API keys. 
-  # Use 'firebase apphosting:secrets:set' to set them.
+  # Use 'firebase apphosting:secrets:set' to set these in your production environment.
   - variable: STRIPE_API_KEY
     secret: STRIPE_API_KEY
   - variable: STRIPE_WEBHOOK_SECRET
     secret: STRIPE_WEBHOOK_SECRET
 
   # --- LIVE PRICE IDs ---
-  # IMPORTANT: Replace the placeholders below with the actual API IDs 
+  # IMPORTANT: You MUST replace the placeholders below with the actual API IDs 
   # from your NEW LIVE Stripe account products.
   - variable: STRIPE_PLUS_MONTHLY_ID
     value: "price_REPLACE_WITH_YOUR_LIVE_PLUS_ID"

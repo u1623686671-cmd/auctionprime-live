@@ -36,12 +36,18 @@ async function getOrCreateStripeCustomerId(userId: string, email: string): Promi
                     return existingId;
                 }
             } catch (error: any) {
-                // If Stripe returns 'resource_missing', the ID belongs to a different account.
-                // We catch this specific error and proceed to create a new one.
-                if (error.code !== 'resource_missing') {
+                // If Stripe returns 'resource_missing' or a "No such customer" message, 
+                // the ID belongs to a different account (likely an old test account).
+                const isNotFoundError = 
+                    error.code === 'resource_missing' || 
+                    (error.message && error.message.toLowerCase().includes('no such customer'));
+
+                if (!isNotFoundError) {
                     throw error;
                 }
-                console.warn(`Customer ID ${existingId} not found in the current Stripe account. Regenerating...`);
+                
+                console.warn(`Stale Customer ID ${existingId} detected. It will be replaced.`);
+                // We proceed to create a new one below.
             }
         }
 
@@ -54,6 +60,7 @@ async function getOrCreateStripeCustomerId(userId: string, email: string): Promi
             
             // Double-check inside the transaction to prevent race conditions
             if (tUserData.stripeCustomerId && tUserData.stripeCustomerId !== existingId) {
+                // Another process already updated the ID, verify it exists or use it.
                 return tUserData.stripeCustomerId;
             }
 
@@ -93,7 +100,7 @@ export async function createCheckoutSession(
     const priceId = process.env[priceIdEnvVarName];
 
     if (!priceId || !priceId.startsWith('price_')) {
-        const errorMessage = `Configuration Error: The Price ID for the ${plan} plan is missing or invalid in the server environment. Please check apphosting.yaml.`;
+        const errorMessage = `Configuration Error: The Price ID for the ${plan} plan is missing or invalid. Please ensure apphosting.yaml is updated with your LIVE Price IDs.`;
         console.error(errorMessage);
         throw new Error(errorMessage);
     }
