@@ -6,16 +6,12 @@ import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import Stripe from 'stripe';
 
-type Plan = 'plus' | 'ultimate' | 'free';
-type BillingCycle = 'monthly';
+type Plan = 'plus' | 'ultimate';
 
-const SUBSCRIPTION_PRICE_IDS: Record<Exclude<Plan, 'free'>, Record<BillingCycle, string>> = {
-    plus: {
-        monthly: process.env.STRIPE_PLUS_MONTHLY_ID!,
-    },
-    ultimate: {
-        monthly: process.env.STRIPE_ULTIMATE_MONTHLY_ID!,
-    },
+// Simplified map for monthly prices only
+const MONTHLY_PRICE_IDS: Record<Plan, string> = {
+    plus: process.env.STRIPE_PLUS_MONTHLY_ID!,
+    ultimate: process.env.STRIPE_ULTIMATE_MONTHLY_ID!,
 };
 
 const TOKEN_PRICE_ID = process.env.STRIPE_TOKEN_PRICE_ID!; 
@@ -56,14 +52,15 @@ async function getOrCreateStripeCustomerId(userId: string, email: string): Promi
 export async function createCheckoutSession(
     userId: string,
     email: string,
-    plan: 'plus' | 'ultimate',
-    billingCycle: 'monthly'
+    plan: 'plus' | 'ultimate'
 ): Promise<void> {
 
-    const priceId = SUBSCRIPTION_PRICE_IDS[plan][billingCycle];
+    const origin = headers().get('origin') || process.env.NEXT_PUBLIC_URL!;
+
+    const priceId = MONTHLY_PRICE_IDS[plan];
 
     if (!priceId || !priceId.startsWith('price_')) {
-        throw new Error('Stripe monthly subscription price IDs are not configured correctly in your environment variables.');
+        throw new Error(`Stripe ${plan} monthly subscription price ID is not configured correctly in your environment variables.`);
     }
 
     const customerId = await getOrCreateStripeCustomerId(userId, email);
@@ -76,8 +73,8 @@ export async function createCheckoutSession(
             price: priceId,
             quantity: 1,
         }],
-        success_url: `${process.env.NEXT_PUBLIC_URL}/profile/subscription?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${process.env.NEXT_PUBLIC_URL}/profile/subscription`,
+        success_url: `${origin}/profile/subscription?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${origin}/profile/subscription`,
         metadata: {
             firebaseUID: userId,
         }
@@ -97,6 +94,8 @@ export async function createOneTimeCheckoutSession(
     quantity: number = 1,
     boostMetadata?: { itemId: string; itemCategory: string }
 ): Promise<void> {
+
+    const origin = headers().get('origin') || process.env.NEXT_PUBLIC_URL!;
 
     const priceId = product === 'token' ? TOKEN_PRICE_ID : BOOST_PRICE_ID;
     const successPath = product === 'token' 
@@ -121,8 +120,8 @@ export async function createOneTimeCheckoutSession(
             price: priceId,
             quantity: quantity,
         }],
-        success_url: `${process.env.NEXT_PUBLIC_URL}${successPath}`,
-        cancel_url: `${process.env.NEXT_PUBLIC_URL}${product === 'token' ? '/profile/buy-tokens' : `/${boostMetadata?.itemCategory}/${boostMetadata?.itemId}`}`,
+        success_url: `${origin}${successPath}`,
+        cancel_url: `${origin}${product === 'token' ? '/profile/buy-tokens' : `/${boostMetadata?.itemCategory}/${boostMetadata?.itemId}`}`,
          metadata: {
             firebaseUID: userId,
             productType: product,
@@ -142,11 +141,12 @@ export async function createOneTimeCheckoutSession(
 
 
 export async function createCustomerPortalSession(userId: string, email: string): Promise<void> {
+    const origin = headers().get('origin') || process.env.NEXT_PUBLIC_URL!;
     const customerId = await getOrCreateStripeCustomerId(userId, email);
 
     const portalSession = await stripe.billingPortal.sessions.create({
         customer: customerId,
-        return_url: `${process.env.NEXT_PUBLIC_URL}/profile/subscription`,
+        return_url: `${origin}/profile/subscription`,
     });
 
     if (portalSession.url) {

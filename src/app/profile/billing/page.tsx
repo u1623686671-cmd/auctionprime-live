@@ -40,7 +40,6 @@ export default function BillingPage() {
     const { toast } = useToast();
     
     const [isProcessing, setIsProcessing] = useState(false);
-    const billingCycle = 'monthly';
 
     const planId = searchParams.get('plan') as 'plus' | 'ultimate' | null;
     const planDetails = planId ? plans[planId] : null;
@@ -63,7 +62,7 @@ export default function BillingPage() {
         setIsProcessing(true);
 
         try {
-            await createCheckoutSession(user.uid, user.email, planId, billingCycle);
+            await createCheckoutSession(user.uid, user.email, planId);
             // The user will be redirected to Stripe by the server action.
             // If it fails, the catch block will handle it.
         } catch (error: any) {
@@ -125,5 +124,3 @@ export default function BillingPage() {
         </div>
     );
 }
-
-    
