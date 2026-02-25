@@ -106,8 +106,7 @@ export async function createCheckoutSession(
 
     try {
         const checkoutSession = await stripe.checkout.sessions.create({
-            // Use automatic payment methods to prioritize saved cards
-            automatic_payment_methods: { enabled: true },
+            payment_method_types: ['card'],
             mode: 'subscription',
             customer: customerId,
             line_items: [{
@@ -169,8 +168,7 @@ export async function createOneTimeCheckoutSession(
 
     try {
         const checkoutSession = await stripe.checkout.sessions.create({
-            // Use automatic payment methods to prioritize saved cards
-            automatic_payment_methods: { enabled: true },
+            payment_method_types: ['card'],
             mode: 'payment',
             customer: customerId,
             line_items: [{

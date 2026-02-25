@@ -34,11 +34,6 @@ const accountNavItems = [
         href: "/profile/subscription"
     },
     {
-        icon: CreditCard,
-        title: "Payment Methods & Billing",
-        href: "/profile/manage-billing"
-    },
-    {
         icon: KeyRound,
         title: "Password",
         href: "/profile/password"
