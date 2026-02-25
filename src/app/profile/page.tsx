@@ -35,7 +35,7 @@ const accountNavItems = [
     },
     {
         icon: CreditCard,
-        title: "Manage Billing",
+        title: "Payment Methods & Billing",
         href: "/profile/manage-billing"
     },
     {
@@ -219,9 +219,6 @@ export default function ProfilePage() {
         return <Loading />;
     }
     
-    const isProfilePage = true;
-
-
     return (
         <div className="container mx-auto max-w-2xl px-4 py-12 md:py-16">
             <header className="mb-12">
